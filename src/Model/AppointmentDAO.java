@@ -121,4 +121,8 @@ public class AppointmentDAO {
             return false;
         }
     }
+
+    public static int saveAppointment(Appointment appointment) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
 }
