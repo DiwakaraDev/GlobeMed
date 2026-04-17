@@ -8,7 +8,7 @@ public class BillingForm extends javax.swing.JDialog {
         setLocationRelativeTo(parent);
     }
 
-    private double currentSubtotal = 0.0;   // ← This is fine ✅
+    private double currentSubtotal = 0.0;
 
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -504,19 +504,17 @@ public class BillingForm extends javax.swing.JDialog {
             }
 
             if (subtotal == 0.0) {
-                // Demo mode: use a sample value if table is empty
                 subtotal = 5000.00;
             }
 
             currentSubtotal = subtotal;
 
-            // ---- DECORATOR PATTERN IN ACTION ----
             Decorator.BillingService billing = new Decorator.BaseBilling(subtotal);
-            // Wrap with Tax
+
             billing = new Decorator.TaxDecorator(billing);
-            // Wrap with Insurance Deduction
+
             billing = new Decorator.InsuranceDecorator(billing, 500.00);
-            // --------------------------------------
+
 
             double finalAmount = billing.calculateTotal();
             String description = billing.getDescription();
@@ -587,19 +585,18 @@ public class BillingForm extends javax.swing.JDialog {
             );
 
             // ---- CHAIN OF RESPONSIBILITY IN ACTION ----
+            Chain.ClaimHandler auditor = new Chain.AuditLoggingHandler();
             Chain.ClaimHandler validator = new Chain.ValidationHandler();
             Chain.ClaimHandler verifier = new Chain.VerificationHandler();
             Chain.ClaimHandler approver = new Chain.ApprovalHandler();
 
-            // Build the chain: Validation → Verification → Approval
+            auditor.setNextHandler(validator);
             validator.setNextHandler(verifier);
             verifier.setNextHandler(approver);
 
-            // Start the chain — only call the first handler
             validator.processRequest(claim);
-            // -------------------------------------------
+            auditor.processRequest(claim);
 
-            // Update status combo and remarks in UI
             jComboBox3.setSelectedItem(claim.getStatus().contains("Approved") ? "Approved"
                     : claim.getStatus().contains("Rejected") ? "Rejected" : "Pending");
             jTextArea1.setText(claim.getRemarks());

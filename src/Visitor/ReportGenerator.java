@@ -7,106 +7,136 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * VISITOR PATTERN — Concrete Visitor Contains the actual report-generation
- * logic for each report type. The MedicalReport form calls this — it never
- * contains report logic itself.
- */
 public class ReportGenerator implements ReportVisitor {
 
-    // Result rows to be shown in the JTable
-    private List<Object[]> rows = new ArrayList<>();
-    private String[] columns = {};
+    private List<Object[]> rows    = new ArrayList<>();
+    private String[]       columns = {};
+    private String         reportSummary = "";
 
-    public List<Object[]> getRows() {
-        return rows;
-    }
+    public List<Object[]> getRows()       { return rows; }
+    public String[]       getColumns()    { return columns; }
+    public String         getSummary()    { return reportSummary; }
 
-    public String[] getColumns() {
-        return columns;
-    }
-
-    // ---- VISIT: Treatment Summary ----
     @Override
     public void visit(TreatmentReport report) {
-        columns = new String[]{"Patient Name", "Treatment Plan", "From", "To"};
+        columns = new String[]{"Patient Name", "Doctor Assigned",
+                               "Prescription", "Next Appointment"};
         rows.clear();
-        String sql = "SELECT p.full_name, pr.treatment_plan, pr.created_at "
-                + "FROM patient_records pr "
-                + "JOIN patients p ON pr.patient_id = p.patient_id "
-                + "WHERE p.full_name LIKE ? "
-                + "AND DATE(pr.created_at) BETWEEN ? AND ?";
-        try (PreparedStatement stmt = DBConnection.getConnection().prepareStatement(sql)) {
-            stmt.setString(1, "%" + report.getPatientName() + "%");
-            stmt.setString(2, report.getFromDate().isEmpty() ? "2000-01-01" : report.getFromDate());
-            stmt.setString(3, report.getToDate().isEmpty() ? "2099-12-31" : report.getToDate());
+
+        String sql = "SELECT p.full_name, tp.doctor_assigned, "
+                   + "tp.prescription, tp.next_appointment "
+                   + "FROM treatment_plans tp "
+                   + "JOIN patients p ON tp.patient_id = p.patient_id "
+                   + "WHERE (? = '' OR p.full_name LIKE ?) "
+                   + "AND (tp.created_at >= ? OR ? = '') "
+                   + "ORDER BY tp.created_at DESC";
+
+        try (PreparedStatement stmt = DBConnection.getInstance()
+                .getConnection().prepareStatement(sql)) {
+
+            String nameFilter = "%" + report.getPatientName() + "%";
+            stmt.setString(1, report.getPatientName());
+            stmt.setString(2, nameFilter);
+            stmt.setString(3, report.getFromDate().isEmpty() ? "2000-01-01" : report.getFromDate());
+            stmt.setString(4, report.getFromDate());
+
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
                 rows.add(new Object[]{
                     rs.getString("full_name"),
-                    rs.getString("treatment_plan"),
-                    report.getFromDate(),
-                    report.getToDate()
+                    rs.getString("doctor_assigned"),
+                    rs.getString("prescription"),
+                    rs.getString("next_appointment")
                 });
             }
+            reportSummary = "Treatment Summary Report | Patient filter: '"
+                + report.getPatientName() + "' | Records: " + rows.size();
+
         } catch (SQLException e) {
             System.err.println("TreatmentReport visitor error: " + e.getMessage());
+            reportSummary = "Error generating Treatment Summary: " + e.getMessage();
         }
     }
 
-    // ---- VISIT: Diagnostic Results ----
     @Override
     public void visit(DiagnosticReport report) {
-        columns = new String[]{"Patient ID", "Full Name", "Medical History", "Date"};
+        columns = new String[]{"Patient ID", "Full Name",
+                               "Diagnosis", "Allergies", "Visit Date"};
         rows.clear();
-        String sql = "SELECT pr.patient_id, p.full_name, pr.medical_history, pr.created_at "
-                + "FROM patient_records pr "
-                + "JOIN patients p ON pr.patient_id = p.patient_id "
-                + "WHERE pr.patient_id LIKE ? "
-                + "AND DATE(pr.created_at) BETWEEN ? AND ?";
-        try (PreparedStatement stmt = DBConnection.getConnection().prepareStatement(sql)) {
-            stmt.setString(1, "%" + report.getPatientId() + "%");
-            stmt.setString(2, report.getFromDate().isEmpty() ? "2000-01-01" : report.getFromDate());
-            stmt.setString(3, report.getToDate().isEmpty() ? "2099-12-31" : report.getToDate());
+
+        String sql = "SELECT mh.patient_id, p.full_name, mh.diagnosis, "
+                   + "mh.allergies, mh.visit_date "
+                   + "FROM medical_history mh "
+                   + "JOIN patients p ON mh.patient_id = p.patient_id "
+                   + "WHERE (? = '' OR mh.patient_id = ?) "
+                   + "AND (mh.visit_date BETWEEN ? AND ?) "
+                   + "ORDER BY mh.visit_date DESC";
+
+        try (PreparedStatement stmt = DBConnection.getInstance()
+                .getConnection().prepareStatement(sql)) {
+
+            boolean hasId = !report.getPatientId().isEmpty();
+            stmt.setString(1, report.getPatientId());
+            stmt.setString(2, hasId ? report.getPatientId() : "0");
+            stmt.setString(3, report.getFromDate().isEmpty() ? "2000-01-01" : report.getFromDate());
+            stmt.setString(4, report.getToDate().isEmpty()   ? "2099-12-31" : report.getToDate());
+
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
                 rows.add(new Object[]{
                     rs.getInt("patient_id"),
                     rs.getString("full_name"),
-                    rs.getString("medical_history"),
-                    rs.getString("created_at")
+                    rs.getString("diagnosis"),
+                    rs.getString("allergies"),
+                    rs.getString("visit_date")
                 });
             }
+            reportSummary = "Diagnostic Results Report | Records: " + rows.size();
+
         } catch (SQLException e) {
             System.err.println("DiagnosticReport visitor error: " + e.getMessage());
+            reportSummary = "Error generating Diagnostic Report: " + e.getMessage();
         }
     }
 
-    // ---- VISIT: Financial Report ----
     @Override
     public void visit(FinancialReport report) {
-        columns = new String[]{"Patient ID", "Patient Name", "Amount (Rs.)", "Status", "Date"};
+        columns = new String[]{"Patient ID", "Patient Name",
+                               "Subtotal (Rs.)", "After Tax (Rs.)",
+                               "Final Amount (Rs.)", "Billed At"};
         rows.clear();
-        String sql = "SELECT b.patient_id, b.patient_name, b.final_amount, 'Billed', b.created_at "
-                + "FROM billing b "
-                + "WHERE b.patient_id LIKE ? "
-                + "AND DATE(b.created_at) BETWEEN ? AND ?";
-        try (PreparedStatement stmt = DBConnection.getConnection().prepareStatement(sql)) {
-            stmt.setString(1, "%" + report.getPatientId() + "%");
-            stmt.setString(2, report.getFromDate().isEmpty() ? "2000-01-01" : report.getFromDate());
-            stmt.setString(3, report.getToDate().isEmpty() ? "2099-12-31" : report.getToDate());
+
+        String sql = "SELECT b.patient_id, b.patient_name, b.subtotal, "
+                   + "b.after_tax, b.final_amount, b.created_at "
+                   + "FROM billing b "
+                   + "WHERE (? = '' OR b.patient_id = ?) "
+                   + "AND (DATE(b.created_at) BETWEEN ? AND ?) "
+                   + "ORDER BY b.created_at DESC";
+
+        try (PreparedStatement stmt = DBConnection.getInstance()
+                .getConnection().prepareStatement(sql)) {
+
+            stmt.setString(1, report.getPatientId());
+            stmt.setString(2, report.getPatientId().isEmpty() ? "0" : report.getPatientId());
+            stmt.setString(3, report.getFromDate().isEmpty() ? "2000-01-01" : report.getFromDate());
+            stmt.setString(4, report.getToDate().isEmpty()   ? "2099-12-31" : report.getToDate());
+
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
                 rows.add(new Object[]{
                     rs.getInt("patient_id"),
                     rs.getString("patient_name"),
-                    rs.getDouble("final_amount"),
-                    "Billed",
+                    String.format("%.2f", rs.getDouble("subtotal")),
+                    String.format("%.2f", rs.getDouble("after_tax")),
+                    String.format("%.2f", rs.getDouble("final_amount")),
                     rs.getString("created_at")
                 });
             }
+            reportSummary = "Financial Report | Total records: " + rows.size();
+
         } catch (SQLException e) {
             System.err.println("FinancialReport visitor error: " + e.getMessage());
+            reportSummary = "Error generating Financial Report: " + e.getMessage();
         }
     }
 }

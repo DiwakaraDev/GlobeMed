@@ -14,7 +14,7 @@ public class PatientRecordDAO {
                    + "(patient_id, full_name, dob, gender, blood_type, allergies, "
                    + "medical_history, treatment_plan) "
                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement stmt = DBConnection.getConnection()
+        try (PreparedStatement stmt = DBConnection.getInstance().getConnection()
                 .prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
             stmt.setInt(1,    record.getPatientId());
             stmt.setString(2, record.getFullName());
@@ -36,7 +36,7 @@ public class PatientRecordDAO {
     public static List<PatientRecord> getAllRecords() {
         List<PatientRecord> list = new ArrayList<>();
         String sql = "SELECT * FROM patient_records ORDER BY created_at DESC";
-        try (PreparedStatement stmt = DBConnection.getConnection().prepareStatement(sql)) {
+        try (PreparedStatement stmt = DBConnection.getInstance().getConnection().prepareStatement(sql)) {
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
                 PatientRecord r = new PatientRecord();

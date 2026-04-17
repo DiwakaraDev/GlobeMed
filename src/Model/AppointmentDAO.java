@@ -6,7 +6,7 @@ import java.util.*;
 
 public class AppointmentDAO {
 
-    // ── BOOK ────────────────────────────────────────────────────────────────
+    //BOOK
     public static boolean bookAppointment(int patientId, String doctor,
             String type, String date, String timeSlot) {
 
@@ -19,8 +19,7 @@ public class AppointmentDAO {
                 + "(patient_id, doctor, appointment_type, appointment_date, "
                 + "time_slot, status) VALUES (?, ?, ?, ?, ?, 'Available')";
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.getInstance().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, patientId);
             ps.setString(2, doctor);
@@ -36,7 +35,7 @@ public class AppointmentDAO {
         }
     }
 
-    // ── VIEW ALL FOR PATIENT ────────────────────────────────────────────────
+    //VIEW ALL FOR PATIENT
     public static List<Map<String, Object>> getAppointments(int patientId) {
         List<Map<String, Object>> list = new ArrayList<>();
 
@@ -44,19 +43,18 @@ public class AppointmentDAO {
                 + "time_slot, status FROM appointments "
                 + "WHERE patient_id = ? ORDER BY appointment_date DESC";
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.getInstance().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, patientId);
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
                 Map<String, Object> row = new LinkedHashMap<>();
-                row.put("appointment_id",   rs.getInt("appointment_id"));
-                row.put("doctor",           rs.getString("doctor"));
+                row.put("appointment_id", rs.getInt("appointment_id"));
+                row.put("doctor", rs.getString("doctor"));
                 row.put("appointment_date", rs.getString("appointment_date"));
-                row.put("time_slot",        rs.getString("time_slot"));
-                row.put("status",           rs.getString("status"));
+                row.put("time_slot", rs.getString("time_slot"));
+                row.put("status", rs.getString("status"));
                 list.add(row);
             }
 
@@ -66,16 +64,17 @@ public class AppointmentDAO {
         return list;
     }
 
-    // ── CANCEL ──────────────────────────────────────────────────────────────
+    //CANCEL
     public static boolean cancelAppointment(int appointmentId) {
 
-        if (appointmentId <= 0) return false;
+        if (appointmentId <= 0) {
+            return false;
+        }
 
         String sql = "UPDATE appointments SET status = 'Cancelled' "
                 + "WHERE appointment_id = ?";
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.getInstance().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, appointmentId);
             return ps.executeUpdate() > 0;
@@ -84,5 +83,30 @@ public class AppointmentDAO {
             System.err.println("AppointmentDAO.cancel error: " + e.getMessage());
             return false;
         }
+    }
+
+    //GET APPOIMENT
+    public static List<Map<String, Object>> getAppointmentsByDoctorAndDate(
+            String doctor, String date) {
+
+        List<Map<String, Object>> list = new ArrayList<>();
+        String sql = "SELECT time_slot, status FROM appointments "
+                + "WHERE doctor = ? AND appointment_date = ?";
+
+        try (Connection conn = DBConnection.getInstance().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, doctor);
+            ps.setString(2, date);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Map<String, Object> row = new LinkedHashMap<>();
+                row.put("time_slot", rs.getString("time_slot"));
+                row.put("status", rs.getString("status"));
+                list.add(row);
+            }
+        } catch (SQLException e) {
+            System.err.println("getByDoctorAndDate error: " + e.getMessage());
+        }
+        return list;
     }
 }

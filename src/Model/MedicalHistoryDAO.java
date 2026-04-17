@@ -27,7 +27,7 @@ public class MedicalHistoryDAO {
                 + "(patient_id, visit_date, diagnosis, allergies, previous_treatment) "
                 + "VALUES (?, CURDATE(), ?, ?, ?)";
 
-        try (Connection conn = DBConnection.getConnection();
+        try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, patientId);
@@ -54,7 +54,7 @@ public class MedicalHistoryDAO {
         String sql = "SELECT history_id, visit_date, diagnosis, allergies, previous_treatment "
                 + "FROM medical_history WHERE patient_id = ? ORDER BY visit_date DESC";
 
-        try (Connection conn = DBConnection.getConnection();
+        try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, patientId);
@@ -85,7 +85,7 @@ public class MedicalHistoryDAO {
         String sql = "UPDATE medical_history SET diagnosis = ?, allergies = ?, "
                 + "previous_treatment = ? WHERE history_id = ?";
 
-        try (Connection conn = DBConnection.getConnection();
+        try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, diagnosis != null ? diagnosis : "");
@@ -108,7 +108,7 @@ public class MedicalHistoryDAO {
 
         String sql = "DELETE FROM medical_history WHERE history_id = ?";
 
-        try (Connection conn = DBConnection.getConnection();
+        try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, historyId);
@@ -123,7 +123,7 @@ public class MedicalHistoryDAO {
     // ── HELPER — verify patient exists ──────────────────────────────────────
     private static boolean patientExists(int patientId) {
         String sql = "SELECT 1 FROM patients WHERE patient_id = ?";
-        try (Connection conn = DBConnection.getConnection();
+        try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, patientId);

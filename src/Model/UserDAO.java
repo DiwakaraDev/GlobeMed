@@ -8,7 +8,7 @@ public class UserDAO {
     public static User authenticate(String username, String password) {
         String sql = "SELECT id, username, role FROM users "
                    + "WHERE username = ? AND password = ?";
-        try (Connection conn = DBConnection.getConnection();
+        try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, username);

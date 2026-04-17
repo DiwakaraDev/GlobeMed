@@ -8,7 +8,7 @@ public class PatientDAO {
     // CREATE — returns generated patient ID
     public static int createPatient(Patient p) {
         String sql = "INSERT INTO patients (full_name, dob, gender, phone, email) VALUES (?, ?, ?, ?, ?)";
-        try (PreparedStatement stmt = DBConnection.getConnection()
+        try (PreparedStatement stmt = DBConnection.getInstance().getConnection()
                 .prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, p.getFullName());
             stmt.setDate(2, p.getDob() != null ? Date.valueOf(p.getDob()) : null);
@@ -29,7 +29,7 @@ public class PatientDAO {
     // UPDATE — returns true if successful
     public static boolean updatePatient(Patient p) {
         String sql = "UPDATE patients SET full_name=?, dob=?, gender=?, phone=?, email=? WHERE patient_id=?";
-        try (PreparedStatement stmt = DBConnection.getConnection().prepareStatement(sql)) {
+        try (PreparedStatement stmt = DBConnection.getInstance().getConnection().prepareStatement(sql)) {
             stmt.setString(1, p.getFullName());
             stmt.setDate(2, p.getDob() != null ? Date.valueOf(p.getDob()) : null);
             stmt.setString(3, p.getGender());
@@ -45,7 +45,7 @@ public class PatientDAO {
 
     public static Model.Patient getPatientById(int patientId) {
         String sql = "SELECT * FROM patients WHERE patient_id = ?";
-        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.getInstance().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, patientId);
             ResultSet rs = ps.executeQuery();

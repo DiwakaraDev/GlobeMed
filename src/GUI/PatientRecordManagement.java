@@ -1,18 +1,14 @@
 package GUI;
 
-import Model.MedicalHistoryDAO;
-import Model.Patient;
-import Model.PatientDAO;
-import javax.swing.JFrame;
-
-/**
- *
- * @author hasin
- */
 public class PatientRecordManagement extends javax.swing.JDialog {
 
-    public PatientRecordManagement(java.awt.Frame parent) {
-        super(parent, "PatientRecordManagement Form", true);
+    private final Proxy.IPatientService patientService;
+
+    public PatientRecordManagement(java.awt.Frame parent, Model.User currentUser) {
+        super(parent, "Patient Record Management", true);
+
+        this.patientService = new Proxy.PatientRecordProxy(
+                currentUser.getUsername(), currentUser.getRole());
         initComponents();
         setLocationRelativeTo(parent);
     }
@@ -690,7 +686,7 @@ public class PatientRecordManagement extends javax.swing.JDialog {
                         }
                     }
 
-                    // ---- BUILDER PATTERN ----
+                    //BUILDER PATTERN
                     Model.Patient p = new Builder.PatientBuilder()
                             .setFullName(name)
                             .setDob(dob)
@@ -698,18 +694,16 @@ public class PatientRecordManagement extends javax.swing.JDialog {
                             .setContact(contact)
                             .setAddress(address)
                             .build();
-                    // -------------------------
 
                     int newId = Model.PatientDAO.createPatient(p);
 
                     javax.swing.SwingUtilities.invokeLater(() -> {
                         txtPatientID.setText(String.valueOf(newId));
-                        // ✅ FIX: sync to Medical History search field too
                         txtSearchID.setText(String.valueOf(newId));
 
                         javax.swing.JOptionPane.showMessageDialog(
                                 PatientRecordManagement.this,
-                                "✅ Patient saved using Builder Pattern!\nPatient ID: " + newId,
+                                "Patient saved using Builder Pattern!\nPatient ID: " + newId,
                                 "Saved", javax.swing.JOptionPane.INFORMATION_MESSAGE);
                     });
 
@@ -735,12 +729,10 @@ public class PatientRecordManagement extends javax.swing.JDialog {
             return;
         }
 
-        // Read current values directly from the selected table row
         String currentDiagnosis = String.valueOf(historyTable.getValueAt(selectedRow, 1));
         String currentAllergies = String.valueOf(historyTable.getValueAt(selectedRow, 2));
         String currentTreatment = String.valueOf(historyTable.getValueAt(selectedRow, 3));
 
-        // Get history_id from DAO using patient + row index
         String pidText = txtPatientID.getText().trim();
         if (pidText.isEmpty()) {
             javax.swing.JOptionPane.showMessageDialog(this,
@@ -750,7 +742,6 @@ public class PatientRecordManagement extends javax.swing.JDialog {
         }
         int patientId = Integer.parseInt(pidText);
 
-        // Fetch history list to get the correct history_id
         java.util.List<java.util.Map<String, Object>> rows
                 = Model.MedicalHistoryDAO.getHistoryForPatient(patientId);
 
@@ -760,7 +751,6 @@ public class PatientRecordManagement extends javax.swing.JDialog {
 
         int historyId = (int) rows.get(selectedRow).get("history_id");
 
-        // ---- Open update dialog (no data in main form fields) ----
         javax.swing.JPanel panel = new javax.swing.JPanel(new java.awt.GridLayout(6, 2, 8, 8));
 
         javax.swing.JTextField dlgDiagnosis = new javax.swing.JTextField(currentDiagnosis);
@@ -796,10 +786,10 @@ public class PatientRecordManagement extends javax.swing.JDialog {
                     historyId, newDiagnosis, newAllergies, newTreatment);
 
             if (updated) {
-                // Refresh table without touching input fields
+
                 refreshHistoryTable(patientId);
                 javax.swing.JOptionPane.showMessageDialog(this,
-                        "✅ Record updated successfully!", "Updated",
+                        "Record updated successfully!", "Updated",
                         javax.swing.JOptionPane.INFORMATION_MESSAGE);
             } else {
                 javax.swing.JOptionPane.showMessageDialog(this,
@@ -847,7 +837,6 @@ public class PatientRecordManagement extends javax.swing.JDialog {
             jTextField7.setText("");
             jTextField8.setText("");
 
-            // ✅ FIX: refresh history table immediately
             java.util.List<java.util.Map<String, Object>> rows
                     = Model.MedicalHistoryDAO.getHistoryForPatient(patientId);
             javax.swing.table.DefaultTableModel tModel
@@ -863,7 +852,7 @@ public class PatientRecordManagement extends javax.swing.JDialog {
             }
 
             javax.swing.JOptionPane.showMessageDialog(this,
-                    "✅ Medical history record added!", "Success",
+                    "Medical history record added!", "Success",
                     javax.swing.JOptionPane.INFORMATION_MESSAGE);
         } else {
             javax.swing.JOptionPane.showMessageDialog(this,
@@ -896,7 +885,7 @@ public class PatientRecordManagement extends javax.swing.JDialog {
                     javax.swing.SwingUtilities.invokeLater(()
                             -> javax.swing.JOptionPane.showMessageDialog(
                                     PatientRecordManagement.this,
-                                    ok ? "✅ Patient updated!" : "❌ Update failed.",
+                                    ok ? "Patient updated!" : "Update failed.",
                                     "Update", javax.swing.JOptionPane.INFORMATION_MESSAGE)
                     );
                 } catch (Exception ex) {
@@ -943,7 +932,6 @@ public class PatientRecordManagement extends javax.swing.JDialog {
                 try {
                     java.util.List<java.util.Map<String, Object>> rows = get();
 
-                    // ✅ FIX: sync ID to Personal Details field
                     txtPatientID.setText(String.valueOf(id));
 
                     javax.swing.table.DefaultTableModel tModel
@@ -977,7 +965,7 @@ public class PatientRecordManagement extends javax.swing.JDialog {
     }//GEN-LAST:event_btnSearchActionPerformed
 
     private void rbMaleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rbMaleActionPerformed
-        // TODO add your handling code here:
+
     }//GEN-LAST:event_rbMaleActionPerformed
 
     private void jButton10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton10ActionPerformed
@@ -1039,7 +1027,7 @@ public class PatientRecordManagement extends javax.swing.JDialog {
 
         if (saved) {
             javax.swing.JOptionPane.showMessageDialog(this,
-                    "✅ Treatment plan saved!", "Saved",
+                    "Treatment plan saved!", "Saved",
                     javax.swing.JOptionPane.INFORMATION_MESSAGE);
         } else {
             javax.swing.JOptionPane.showMessageDialog(this,
@@ -1068,7 +1056,6 @@ public class PatientRecordManagement extends javax.swing.JDialog {
             return;
         }
 
-        // ---- Fetch latest plan from DB ----
         java.util.Map<String, Object> existing
                 = Model.TreatmentPlanDAO.getLatestPlan(patientId);
 
@@ -1082,7 +1069,6 @@ public class PatientRecordManagement extends javax.swing.JDialog {
 
         int planId = (int) existing.get("plan_id");
 
-        // ---- Build update dialog — design pattern intact, no form fields touched ----
         javax.swing.JPanel panel = new javax.swing.JPanel(
                 new java.awt.GridLayout(8, 2, 8, 8));
 
@@ -1140,7 +1126,7 @@ public class PatientRecordManagement extends javax.swing.JDialog {
 
             if (updated) {
                 javax.swing.JOptionPane.showMessageDialog(this,
-                        "✅ Treatment plan updated successfully!",
+                        "Treatment plan updated successfully!",
                         "Updated", javax.swing.JOptionPane.INFORMATION_MESSAGE);
             } else {
                 javax.swing.JOptionPane.showMessageDialog(this,

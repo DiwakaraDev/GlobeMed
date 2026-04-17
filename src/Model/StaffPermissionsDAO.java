@@ -17,7 +17,7 @@ public class StaffPermissionsDAO {
                    + "view_records=?, edit_records=?, delete_records=?, "
                    + "prescribe_meds=?, access_diagnostics=?, approve_surgery=?, "
                    + "manage_billing=?, approve_claims=?, manage_staff=?";
-        try (PreparedStatement stmt = DBConnection.getConnection().prepareStatement(sql)) {
+        try (PreparedStatement stmt = DBConnection.getInstance().getConnection().prepareStatement(sql)) {
             // INSERT values
             stmt.setInt(1,     p.getStaffId());
             stmt.setBoolean(2, p.isViewRecords());

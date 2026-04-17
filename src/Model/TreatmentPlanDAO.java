@@ -20,7 +20,7 @@ public class TreatmentPlanDAO {
                 + "next_appointment, special_instructions) "
                 + "VALUES (?, ?, ?, ?, ?)";
 
-        try (Connection conn = DBConnection.getConnection();
+        try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, patientId);
@@ -49,7 +49,7 @@ public class TreatmentPlanDAO {
                 + "FROM treatment_plans WHERE patient_id = ? "
                 + "ORDER BY created_at DESC LIMIT 1";
 
-        try (Connection conn = DBConnection.getConnection();
+        try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, patientId);
@@ -79,7 +79,7 @@ public class TreatmentPlanDAO {
                 + "prescription=?, next_appointment=?, "
                 + "special_instructions=? WHERE plan_id=?";
 
-        try (Connection conn = DBConnection.getConnection();
+        try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, doctor);
@@ -103,7 +103,7 @@ public class TreatmentPlanDAO {
 
         String sql = "DELETE FROM treatment_plans WHERE plan_id=?";
 
-        try (Connection conn = DBConnection.getConnection();
+        try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, planId);

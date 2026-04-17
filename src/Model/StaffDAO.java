@@ -11,7 +11,7 @@ public class StaffDAO {
         Map<String, Object> staff = new LinkedHashMap<>();
         String sql = "SELECT * FROM staff WHERE staff_id = ?";
 
-        try (Connection conn = DBConnection.getConnection();
+        try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, staffId);
@@ -53,7 +53,7 @@ public class StaffDAO {
                 + "perm_admin_view, perm_admin_edit, perm_admin_delete) "
                 + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
-        try (Connection conn = DBConnection.getConnection();
+        try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, staffId);
@@ -85,7 +85,7 @@ public class StaffDAO {
                 + "perm_admin_view=?, perm_admin_edit=?, perm_admin_delete=? "
                 + "WHERE staff_id=?";
 
-        try (Connection conn = DBConnection.getConnection();
+        try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, name);
