@@ -1,6 +1,7 @@
 package Model;
 
 public class User {
+
     private int id;
     private String username;
     private String role;
@@ -11,7 +12,15 @@ public class User {
         this.role = role;
     }
 
-    public int getId()         { return id; }
-    public String getUsername(){ return username; }
-    public String getRole()    { return role; }
+    public int getId() {
+        return id;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getRole() {
+        return role;
+    }
 }

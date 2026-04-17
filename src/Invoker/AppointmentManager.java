@@ -4,11 +4,6 @@ import Command.Command;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * COMMAND PATTERN — Invoker
- * Executes commands without knowing what they do.
- * Keeps a history of all executed commands.
- */
 public class AppointmentManager {
 
     private List<Command> history = new ArrayList<>();

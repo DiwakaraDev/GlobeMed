@@ -6,7 +6,6 @@ import java.util.*;
 
 public class TreatmentPlanDAO {
 
-    // ── SAVE ────────────────────────────────────────────────────────────────
     public static boolean savePlan(int patientId, String doctor,
             String prescription, String nextAppt, String instructions) {
 
@@ -20,13 +19,12 @@ public class TreatmentPlanDAO {
                 + "next_appointment, special_instructions) "
                 + "VALUES (?, ?, ?, ?, ?)";
 
-        try (Connection conn = DBConnection.getInstance().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.getInstance().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, patientId);
             ps.setString(2, doctor);
             ps.setString(3, prescription);
-            ps.setString(4, nextAppt.isEmpty()     ? null : nextAppt);
+            ps.setString(4, nextAppt.isEmpty() ? null : nextAppt);
             ps.setString(5, instructions.isEmpty() ? null : instructions);
 
             int rows = ps.executeUpdate();
@@ -40,7 +38,6 @@ public class TreatmentPlanDAO {
         }
     }
 
-    // ── GET LATEST PLAN ─────────────────────────────────────────────────────
     public static Map<String, Object> getLatestPlan(int patientId) {
         Map<String, Object> plan = new LinkedHashMap<>();
 
@@ -49,17 +46,16 @@ public class TreatmentPlanDAO {
                 + "FROM treatment_plans WHERE patient_id = ? "
                 + "ORDER BY created_at DESC LIMIT 1";
 
-        try (Connection conn = DBConnection.getInstance().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.getInstance().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, patientId);
             ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
-                plan.put("plan_id",              rs.getInt("plan_id"));
-                plan.put("doctor_assigned",      rs.getString("doctor_assigned"));
-                plan.put("prescription",         rs.getString("prescription"));
-                plan.put("next_appointment",     rs.getString("next_appointment"));
+                plan.put("plan_id", rs.getInt("plan_id"));
+                plan.put("doctor_assigned", rs.getString("doctor_assigned"));
+                plan.put("prescription", rs.getString("prescription"));
+                plan.put("next_appointment", rs.getString("next_appointment"));
                 plan.put("special_instructions", rs.getString("special_instructions"));
             }
 
@@ -69,22 +65,22 @@ public class TreatmentPlanDAO {
         return plan;
     }
 
-    // ── UPDATE ───────────────────────────────────────────────────────────────
     public static boolean updatePlan(int planId, String doctor,
             String prescription, String nextAppt, String instructions) {
 
-        if (planId <= 0) return false;
+        if (planId <= 0) {
+            return false;
+        }
 
         String sql = "UPDATE treatment_plans SET doctor_assigned=?, "
                 + "prescription=?, next_appointment=?, "
                 + "special_instructions=? WHERE plan_id=?";
 
-        try (Connection conn = DBConnection.getInstance().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.getInstance().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, doctor);
             ps.setString(2, prescription);
-            ps.setString(3, nextAppt.isEmpty()     ? null : nextAppt);
+            ps.setString(3, nextAppt.isEmpty() ? null : nextAppt);
             ps.setString(4, instructions.isEmpty() ? null : instructions);
             ps.setInt(5, planId);
 
@@ -96,15 +92,15 @@ public class TreatmentPlanDAO {
         }
     }
 
-    // ── DELETE ───────────────────────────────────────────────────────────────
     public static boolean deletePlan(int planId) {
 
-        if (planId <= 0) return false;
+        if (planId <= 0) {
+            return false;
+        }
 
         String sql = "DELETE FROM treatment_plans WHERE plan_id=?";
 
-        try (Connection conn = DBConnection.getInstance().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.getInstance().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, planId);
             return ps.executeUpdate() > 0;

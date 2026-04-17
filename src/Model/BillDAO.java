@@ -8,9 +8,9 @@ public class BillDAO {
 
     public static boolean saveBill(Bill bill) {
         String sql = "INSERT INTO billing (patient_id, patient_name, subtotal, after_tax, final_amount, description) "
-                   + "VALUES (?, ?, ?, ?, ?, ?)";
+                + "VALUES (?, ?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = DBConnection.getInstance().getConnection().prepareStatement(sql)) {
-            stmt.setInt(1,    bill.getPatientId());
+            stmt.setInt(1, bill.getPatientId());
             stmt.setString(2, bill.getPatientName());
             stmt.setDouble(3, bill.getSubtotal());
             stmt.setDouble(4, bill.getAfterTax());

@@ -10,15 +10,15 @@ public class PatientRecordProxy implements IPatientService {
 
     public PatientRecordProxy(String username, String userRole) {
         this.realService = new RealPatientService();
-        this.username    = username;
-        this.userRole    = userRole;
+        this.username = username;
+        this.userRole = userRole;
     }
 
     @Override
     public Patient getPatientById(int patientId) {
         if (!canRead()) {
             throw new SecurityException(
-                "Access Denied: " + username + " (" + userRole + ") cannot read patient records.");
+                    "Access Denied: " + username + " (" + userRole + ") cannot read patient records.");
         }
         logAccess("READ", patientId);
         return realService.getPatientById(patientId);
@@ -28,7 +28,7 @@ public class PatientRecordProxy implements IPatientService {
     public int createPatient(Patient patient) {
         if (!canWrite()) {
             throw new SecurityException(
-                "Access Denied: " + username + " (" + userRole + ") cannot create patient records.");
+                    "Access Denied: " + username + " (" + userRole + ") cannot create patient records.");
         }
         logAccess("CREATE", -1);
         return realService.createPatient(patient);
@@ -38,30 +38,28 @@ public class PatientRecordProxy implements IPatientService {
     public boolean updatePatient(Patient patient) {
         if (!canWrite()) {
             throw new SecurityException(
-                "Access Denied: " + username + " (" + userRole + ") cannot update patient records.");
+                    "Access Denied: " + username + " (" + userRole + ") cannot update patient records.");
         }
         logAccess("UPDATE", patient.getPatientId());
         return realService.updatePatient(patient);
     }
 
-    //Permission rules
     private boolean canRead() {
         return userRole.equals("Doctor")
-            || userRole.equals("Nurse")
-            || userRole.equals("Administrator");
+                || userRole.equals("Nurse")
+                || userRole.equals("Administrator");
     }
 
     private boolean canWrite() {
         return userRole.equals("Doctor")
-            || userRole.equals("Administrator");
+                || userRole.equals("Administrator");
     }
 
-    //Access logging — security audit trail
     private void logAccess(String action, int patientId) {
         System.out.println("[AUDIT] " + java.time.LocalDateTime.now()
-            + " | User: " + username
-            + " | Role: " + userRole
-            + " | Action: " + action
-            + " | PatientID: " + (patientId == -1 ? "NEW" : patientId));
+                + " | User: " + username
+                + " | Role: " + userRole
+                + " | Action: " + action
+                + " | PatientID: " + (patientId == -1 ? "NEW" : patientId));
     }
 }

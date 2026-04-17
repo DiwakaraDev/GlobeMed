@@ -3,10 +3,6 @@ package Command;
 import Model.Appointment;
 import Model.AppointmentDAO;
 
-/**
- * COMMAND PATTERN — Concrete Command
- * Encapsulates the "Book Appointment" action.
- */
 public class BookAppointmentCommand implements Command {
 
     private Appointment appointment;
@@ -22,7 +18,6 @@ public class BookAppointmentCommand implements Command {
         System.out.println("BookAppointmentCommand executed. ID: " + generatedId);
     }
 
-    // Retrieve the DB-generated ID after execute()
     public int getGeneratedId() {
         return generatedId;
     }

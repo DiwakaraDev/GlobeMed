@@ -3,10 +3,6 @@ package Composite;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * COMPOSITE PATTERN — Composite (middle level)
- * A department contains multiple StaffMembers.
- */
 public class Department implements OrgComponent {
 
     private String name;
@@ -29,10 +25,14 @@ public class Department implements OrgComponent {
     }
 
     @Override
-    public String getName() { return name; }
+    public String getName() {
+        return name;
+    }
 
     @Override
-    public String getRole() { return "Department"; }
+    public String getRole() {
+        return "Department";
+    }
 
     @Override
     public void showDetails(String indent) {

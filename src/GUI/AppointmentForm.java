@@ -12,7 +12,6 @@ public class AppointmentForm extends javax.swing.JDialog {
         txtDate.setText("YYYY-MM-DD");
         txtDate.setForeground(java.awt.Color.GRAY);
 
-// Clear hint on focus
         txtDate.addFocusListener(new java.awt.event.FocusAdapter() {
             @Override
             public void focusGained(java.awt.event.FocusEvent e) {
@@ -50,7 +49,6 @@ public class AppointmentForm extends javax.swing.JDialog {
         });
     }
 
-    // Add this field at the TOP of the class (after the class declaration line)
     private Invoker.AppointmentManager appointmentManager = new Invoker.AppointmentManager();
 
     @SuppressWarnings("unchecked")
@@ -431,7 +429,6 @@ public class AppointmentForm extends javax.swing.JDialog {
 
         refreshAppointmentTable(patientId);
 
-        // Also load patient name
         Model.Patient p = Model.PatientDAO.getPatientById(patientId);
         if (p != null) {
             txtName.setText(p.getFullName());
@@ -474,49 +471,47 @@ public class AppointmentForm extends javax.swing.JDialog {
         txtDate.setText("");
         cmbTimeSlot.setSelectedIndex(0);
     }
-    
+
     private void lookupPatientName() {
-    String pidText = txtPatientID.getText().trim();
+        String pidText = txtPatientID.getText().trim();
 
-    // Clear name if field is empty or non-numeric
-    if (pidText.isEmpty()) {
-        txtName.setText("");
-        return;
-    }
-
-    int patientId;
-    try {
-        patientId = Integer.parseInt(pidText);
-    } catch (NumberFormatException e) {
-        txtName.setText("Invalid ID");
-        return;
-    }
-
-    // Run DB lookup off the EDT to keep UI responsive
-    new javax.swing.SwingWorker<String, Void>() {
-        @Override
-        protected String doInBackground() {
-            Model.Patient p = Model.PatientDAO.getPatientById(patientId);
-            return (p != null) ? p.getFullName() : null;
+        if (pidText.isEmpty()) {
+            txtName.setText("");
+            return;
         }
 
-        @Override
-        protected void done() {
-            try {
-                String name = get();
-                if (name != null) {
-                    txtName.setText(name);
-                    // Also refresh table for this patient
-                    refreshAppointmentTable(patientId);
-                } else {
-                    txtName.setText("Not found");
-                }
-            } catch (Exception ex) {
-                txtName.setText("");
+        int patientId;
+        try {
+            patientId = Integer.parseInt(pidText);
+        } catch (NumberFormatException e) {
+            txtName.setText("Invalid ID");
+            return;
+        }
+
+        new javax.swing.SwingWorker<String, Void>() {
+            @Override
+            protected String doInBackground() {
+                Model.Patient p = Model.PatientDAO.getPatientById(patientId);
+                return (p != null) ? p.getFullName() : null;
             }
-        }
-    }.execute();
-}
+
+            @Override
+            protected void done() {
+                try {
+                    String name = get();
+                    if (name != null) {
+                        txtName.setText(name);
+
+                        refreshAppointmentTable(patientId);
+                    } else {
+                        txtName.setText("Not found");
+                    }
+                } catch (Exception ex) {
+                    txtName.setText("");
+                }
+            }
+        }.execute();
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTable appointmentTable;

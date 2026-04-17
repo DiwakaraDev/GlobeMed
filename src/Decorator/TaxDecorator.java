@@ -1,8 +1,5 @@
 package Decorator;
 
-/**
- * DECORATOR PATTERN — Adds 15% tax on top of base amount.
- */
 public class TaxDecorator extends BillingDecorator {
 
     private static final double TAX_RATE = 0.15;

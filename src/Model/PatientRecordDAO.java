@@ -11,12 +11,12 @@ public class PatientRecordDAO {
 
     public static int saveRecord(PatientRecord record) {
         String sql = "INSERT INTO patient_records "
-                   + "(patient_id, full_name, dob, gender, blood_type, allergies, "
-                   + "medical_history, treatment_plan) "
-                   + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                + "(patient_id, full_name, dob, gender, blood_type, allergies, "
+                + "medical_history, treatment_plan) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = DBConnection.getInstance().getConnection()
                 .prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
-            stmt.setInt(1,    record.getPatientId());
+            stmt.setInt(1, record.getPatientId());
             stmt.setString(2, record.getFullName());
             stmt.setString(3, record.getDob());
             stmt.setString(4, record.getGender());
@@ -26,7 +26,9 @@ public class PatientRecordDAO {
             stmt.setString(8, record.getTreatmentPlan());
             stmt.executeUpdate();
             ResultSet rs = stmt.getGeneratedKeys();
-            if (rs.next()) return rs.getInt(1);
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
         } catch (SQLException e) {
             System.err.println("PatientRecordDAO.save error: " + e.getMessage());
         }

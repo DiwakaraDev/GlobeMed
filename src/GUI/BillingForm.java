@@ -491,7 +491,6 @@ public class BillingForm extends javax.swing.JDialog {
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         try {
-            // Read subtotal from table rows
             double subtotal = 0.0;
             javax.swing.table.DefaultTableModel model
                     = (javax.swing.table.DefaultTableModel) jTable1.getModel();
@@ -515,11 +514,9 @@ public class BillingForm extends javax.swing.JDialog {
 
             billing = new Decorator.InsuranceDecorator(billing, 500.00);
 
-
             double finalAmount = billing.calculateTotal();
             String description = billing.getDescription();
 
-            // Update UI fields
             jTextField3.setText(String.format("%.2f", subtotal));
             jTextField4.setText(description);
             jTextField5.setText(String.format("%.2f", finalAmount));
@@ -564,7 +561,7 @@ public class BillingForm extends javax.swing.JDialog {
 
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
         try {
-            // Build claim request from form inputs
+
             String patientName = jTextField8.getText().trim();
             String provider = jComboBox1.getSelectedItem().toString();
             String claimType = jComboBox2.getSelectedItem().toString();
@@ -584,7 +581,6 @@ public class BillingForm extends javax.swing.JDialog {
                     patientName, provider, claimType, claimAmount, policyNumber
             );
 
-            // ---- CHAIN OF RESPONSIBILITY IN ACTION ----
             Chain.ClaimHandler auditor = new Chain.AuditLoggingHandler();
             Chain.ClaimHandler validator = new Chain.ValidationHandler();
             Chain.ClaimHandler verifier = new Chain.VerificationHandler();

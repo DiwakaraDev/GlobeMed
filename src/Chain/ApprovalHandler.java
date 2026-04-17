@@ -1,9 +1,5 @@
 package Chain;
 
-/**
- * CHAIN OF RESPONSIBILITY — Handler #3
- * Final approval based on claim amount limits.
- */
 public class ApprovalHandler extends ClaimHandler {
 
     private static final double MAX_AUTO_APPROVAL = 50000.00;
@@ -14,14 +10,13 @@ public class ApprovalHandler extends ClaimHandler {
 
         if (request.getClaimAmount() > MAX_AUTO_APPROVAL) {
             request.setStatus("Pending Manual Review");
-            request.setRemarks(request.getRemarks() +
-                "Amount exceeds Rs.50,000 — requires manual approval.");
+            request.setRemarks(request.getRemarks()
+                    + "Amount exceeds Rs.50,000 — requires manual approval.");
             System.out.println("Sent for Manual Review.");
         } else {
             request.setStatus("Approved");
             request.setRemarks(request.getRemarks() + "Auto-approved.");
             System.out.println("Claim APPROVED.");
         }
-        // End of chain — no next handler needed
     }
 }

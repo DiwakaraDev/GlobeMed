@@ -42,7 +42,6 @@ public class StaffMemberWithRole {
         }
     }
 
-    // Getters
     public String getStaffId() {
         return staffId;
     }

@@ -1,11 +1,9 @@
 package GUI;
 
 import Model.User;
-import Model.UserDAO;
 import Themes.My_theme;
 import com.formdev.flatlaf.FlatClientProperties;
 import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
 
 public class Login extends javax.swing.JFrame {
 
@@ -174,7 +172,7 @@ public class Login extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void txtUsernameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtUsernameActionPerformed
-        // TODO add your handling code here:
+
     }//GEN-LAST:event_txtUsernameActionPerformed
 
     private void btnSignInActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSignInActionPerformed
@@ -182,10 +180,8 @@ public class Login extends javax.swing.JFrame {
         String username = txtUsername.getText().trim();
         String password = new String(txtPassword.getPassword());
 
-        // ---- TEMPLATE METHOD PATTERN IN ACTION ----
-        Template.DBLoginTemplate loginProcess = new Template.DBLoginTemplate();
+        Temp.DBLoginTemplate loginProcess = new Temp.DBLoginTemplate();
         boolean success = loginProcess.login(username, password);
-        // -------------------------------------------
 
         if (success) {
             User user = loginProcess.getAuthenticatedUser();

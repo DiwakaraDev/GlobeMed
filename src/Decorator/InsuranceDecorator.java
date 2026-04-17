@@ -1,8 +1,5 @@
 package Decorator;
 
-/**
- * DECORATOR PATTERN — Applies insurance discount.
- */
 public class InsuranceDecorator extends BillingDecorator {
 
     private double discountAmount;

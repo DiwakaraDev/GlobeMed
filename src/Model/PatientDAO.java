@@ -5,7 +5,6 @@ import java.sql.*;
 
 public class PatientDAO {
 
-    // CREATE — returns generated patient ID
     public static int createPatient(Patient p) {
         String sql = "INSERT INTO patients (full_name, dob, gender, phone, email) VALUES (?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = DBConnection.getInstance().getConnection()
@@ -26,7 +25,6 @@ public class PatientDAO {
         return -1;
     }
 
-    // UPDATE — returns true if successful
     public static boolean updatePatient(Patient p) {
         String sql = "UPDATE patients SET full_name=?, dob=?, gender=?, phone=?, email=? WHERE patient_id=?";
         try (PreparedStatement stmt = DBConnection.getInstance().getConnection().prepareStatement(sql)) {

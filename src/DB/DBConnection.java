@@ -1,4 +1,3 @@
-// ✅ AFTER — Proper Singleton with thread-safe double-checked locking
 package DB;
 
 import java.sql.Connection;
@@ -7,8 +6,8 @@ import java.sql.SQLException;
 
 public class DBConnection {
 
-    private static final String URL      = "jdbc:mysql://localhost:3306/globemed_db";
-    private static final String USER     = "root";
+    private static final String URL = "jdbc:mysql://localhost:3306/globemed_db";
+    private static final String USER = "root";
     private static final String PASSWORD = "PaThum@#2419";
 
     private static volatile DBConnection instance = null;

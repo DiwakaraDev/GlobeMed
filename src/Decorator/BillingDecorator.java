@@ -1,10 +1,5 @@
 package Decorator;
 
-/**
- * DECORATOR PATTERN — Abstract Decorator
- * Wraps a BillingService and delegates to it.
- * InsuranceDecorator and TaxDecorator extend this.
- */
 public abstract class BillingDecorator implements BillingService {
 
     protected BillingService wrappedService;

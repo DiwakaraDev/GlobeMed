@@ -8,10 +8,10 @@ public class MedicalReportDAO {
 
     public static boolean saveReport(MedicalReport report) {
         String sql = "INSERT INTO medical_reports "
-                   + "(patient_id, patient_name, report_type, report_content, generated_by) "
-                   + "VALUES (?, ?, ?, ?, ?)";
+                + "(patient_id, patient_name, report_type, report_content, generated_by) "
+                + "VALUES (?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = DBConnection.getInstance().getConnection().prepareStatement(sql)) {
-            stmt.setInt(1,    report.getPatientId());
+            stmt.setInt(1, report.getPatientId());
             stmt.setString(2, report.getPatientName());
             stmt.setString(3, report.getReportType());
             stmt.setString(4, report.getReportContent());

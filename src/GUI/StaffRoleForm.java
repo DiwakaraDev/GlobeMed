@@ -2,7 +2,7 @@ package GUI;
 
 public class StaffRoleForm extends javax.swing.JDialog {
 
-    private boolean isExistingStaff = false;  // tracks INSERT vs UPDATE mode
+    private boolean isExistingStaff = false;
 
     public StaffRoleForm(java.awt.Frame parent) {
         super(parent, "BillingForm Form", true);

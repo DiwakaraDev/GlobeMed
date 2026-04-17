@@ -36,16 +36,16 @@ public class AppointmentScheduler implements AppointmentSubject {
     }
 
     public boolean bookAppointment(int patientId, String doctor,
-                                   String type, String date, String timeSlot) {
+            String type, String date, String timeSlot) {
 
         if (isConflict(doctor, date, timeSlot)) {
             System.out.println("Scheduling conflict detected: "
-                + doctor + " is already booked at " + timeSlot + " on " + date);
+                    + doctor + " is already booked at " + timeSlot + " on " + date);
             return false;
         }
 
         boolean success = AppointmentDAO.bookAppointment(
-            patientId, doctor, type, date, timeSlot);
+                patientId, doctor, type, date, timeSlot);
 
         if (success) {
             Appointment appt = new Appointment();
@@ -70,8 +70,8 @@ public class AppointmentScheduler implements AppointmentSubject {
     }
 
     private boolean isConflict(String doctor, String date, String timeSlot) {
-        java.util.List<java.util.Map<String, Object>> existing =
-            AppointmentDAO.getAppointmentsByDoctorAndDate(doctor, date);
+        java.util.List<java.util.Map<String, Object>> existing
+                = AppointmentDAO.getAppointmentsByDoctorAndDate(doctor, date);
 
         for (java.util.Map<String, Object> row : existing) {
             if (timeSlot.equals(row.get("time_slot"))

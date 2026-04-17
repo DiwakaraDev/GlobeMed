@@ -3,10 +3,6 @@ package Composite;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * COMPOSITE PATTERN — Root Composite
- * The hospital contains all departments.
- */
 public class Hospital implements OrgComponent {
 
     private String name;
@@ -25,10 +21,14 @@ public class Hospital implements OrgComponent {
     }
 
     @Override
-    public String getName() { return name; }
+    public String getName() {
+        return name;
+    }
 
     @Override
-    public String getRole() { return "Hospital"; }
+    public String getRole() {
+        return "Hospital";
+    }
 
     @Override
     public void showDetails(String indent) {
