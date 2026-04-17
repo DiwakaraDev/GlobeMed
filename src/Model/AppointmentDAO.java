@@ -109,4 +109,16 @@ public class AppointmentDAO {
         }
         return list;
     }
+
+    public static boolean restoreAppointmentStatus(int appointmentId, String status) {
+        String sql = "UPDATE appointments SET status = ? WHERE appointment_id = ?";
+        try (Connection conn = DBConnection.getInstance().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, status);
+            ps.setInt(2, appointmentId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("AppointmentDAO.restore error: " + e.getMessage());
+            return false;
+        }
+    }
 }
