@@ -8,7 +8,6 @@ public class RolePermissionFactory {
     private static final Map<String, RolePermission> permissionPool = new HashMap<>();
 
     static {
- 
 
         permissionPool.put("Doctor", new RolePermission(
             "Doctor",
@@ -27,7 +26,7 @@ public class RolePermissionFactory {
         permissionPool.put("Pharmacist", new RolePermission(
             "Pharmacist",
             true,  false, false,   // General: view only
-            true,  false, false,   // Medical: prescribe only
+            true,  false, false,   // Medical: prescribe only (dispense)
             false, false, false    // Admin: none
         ));
 
@@ -36,6 +35,13 @@ public class RolePermissionFactory {
             true,  true,  true,    // General: full access
             false, false, false,   // Medical: none
             true,  true,  true     // Admin: full access
+        ));
+
+        permissionPool.put("Receptionist", new RolePermission(
+            "Receptionist",
+            true,  false, false,   // General: view only
+            false, false, false,   // Medical: none
+            false, false, false    // Admin: none
         ));
     }
 

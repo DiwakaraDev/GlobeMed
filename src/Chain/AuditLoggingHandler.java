@@ -9,7 +9,7 @@ public class AuditLoggingHandler extends ClaimHandler {
 
     @Override
     public void processRequest(ClaimRequest request) {
-        // Log the incoming claim attempt
+
         String logEntry = String.format(
             "[CLAIM AUDIT] %s | Patient: %s | Provider: %s | Amount: %.2f | Policy: %s",
             LocalDateTime.now(),

@@ -18,6 +18,19 @@ public class BookAppointmentCommand implements Command {
         System.out.println("BookAppointmentCommand executed. ID: " + generatedId);
     }
 
+    @Override
+    public void undo() {
+        if (generatedId == -1) {
+            System.out.println("BookAppointmentCommand.undo(): Nothing to undo — command was never executed.");
+            return;
+        }
+        boolean ok = AppointmentDAO.cancelAppointment(generatedId);
+        System.out.println(ok
+                ? "BookAppointmentCommand undone. Appointment ID " + generatedId + " cancelled."
+                : "BookAppointmentCommand.undo() failed for ID: " + generatedId);
+        generatedId = -1;
+    }
+
     public int getGeneratedId() {
         return generatedId;
     }

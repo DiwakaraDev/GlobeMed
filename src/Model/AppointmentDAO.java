@@ -6,7 +6,6 @@ import java.util.*;
 
 public class AppointmentDAO {
 
-    //BOOK
     public static boolean bookAppointment(int patientId, String doctor,
             String type, String date, String timeSlot) {
 
@@ -35,7 +34,6 @@ public class AppointmentDAO {
         }
     }
 
-    //VIEW ALL FOR PATIENT
     public static List<Map<String, Object>> getAppointments(int patientId) {
         List<Map<String, Object>> list = new ArrayList<>();
 
@@ -64,7 +62,6 @@ public class AppointmentDAO {
         return list;
     }
 
-    //CANCEL
     public static boolean cancelAppointment(int appointmentId) {
 
         if (appointmentId <= 0) {
@@ -85,7 +82,6 @@ public class AppointmentDAO {
         }
     }
 
-    //GET APPOIMENT
     public static List<Map<String, Object>> getAppointmentsByDoctorAndDate(
             String doctor, String date) {
 
@@ -123,6 +119,28 @@ public class AppointmentDAO {
     }
 
     public static int saveAppointment(Appointment appointment) {
-        throw new UnsupportedOperationException("Not supported yet."); 
+        String sql = "INSERT INTO appointments "
+                + "(patient_id, doctor, appointment_type, appointment_date, "
+                + "time_slot, status) VALUES (?, ?, ?, ?, ?, 'Scheduled')";
+        try (Connection conn = DBConnection.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setInt(1, appointment.getPatientId());
+            ps.setString(2, appointment.getDoctor());
+            ps.setString(3, appointment.getType());
+            ps.setString(4, appointment.getAppointmentDate());
+            ps.setString(5, appointment.getTimeSlot());
+            ps.executeUpdate();
+            ResultSet keys = ps.getGeneratedKeys();
+            if (keys.next()) {
+                return keys.getInt(1);
+            }
+        } catch (SQLException e) {
+            System.err.println("AppointmentDAO.saveAppointment error: " + e.getMessage());
+        }
+        return -1;
+    }
+
+    public static boolean restoreAppointment(int appointmentId) {
+        return restoreAppointmentStatus(appointmentId, "Scheduled");
     }
 }
