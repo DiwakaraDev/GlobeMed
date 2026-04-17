@@ -1,9 +1,6 @@
-
 package GUI;
 
-
 import javax.swing.JFrame;
-
 
 /**
  *
@@ -16,6 +13,11 @@ public class MedicalReport extends javax.swing.JFrame {
      */
     public MedicalReport() {
         initComponents();
+        jButton2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton2ActionPerformed(evt);
+            }
+        });
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
     }
 
@@ -140,6 +142,11 @@ public class MedicalReport extends javax.swing.JFrame {
         jButton2.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         jButton2.setForeground(new java.awt.Color(255, 255, 255));
         jButton2.setText("Print Report");
+        jButton2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton2ActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -227,9 +234,73 @@ public class MedicalReport extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnGenerateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGenerateActionPerformed
-        // TODO add your handling code here:
+
+        String reportType = cmbReportType.getSelectedItem().toString();
+        String patientName = cmbPatient.getText().trim();    // Patient Name field
+        String patientId = jTextField1.getText().trim();   // Patient ID field
+        String fromDate = txtFromDate.getText().trim();    // Format: YYYY-MM-DD
+        String toDate = txtToDate.getText().trim();
+
+        // ---- VISITOR PATTERN IN ACTION ----
+        Visitor.ReportGenerator generator = new Visitor.ReportGenerator();
+        Visitor.ReportElement element;
+
+        switch (reportType) {
+            case "Treatment Summary":
+                element = new Visitor.TreatmentReport(patientName, fromDate, toDate);
+                break;
+            case "Diagnostic Results":
+                element = new Visitor.DiagnosticReport(patientId, fromDate, toDate);
+                break;
+            default: // "Financial Report"
+                element = new Visitor.FinancialReport(patientId, fromDate, toDate);
+                break;
+        }
+
+        // Each element calls visitor.visit(this) — pattern kicks in here
+        element.accept(generator);
+        // ------------------------------------
+
+        // Load results into JTable
+        javax.swing.table.DefaultTableModel model
+                = new javax.swing.table.DefaultTableModel(generator.getColumns(), 0);
+
+        for (Object[] row : generator.getRows()) {
+            model.addRow(row);
+        }
+
+        tblReport.setModel(model);
+
+        if (generator.getRows().isEmpty()) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "No records found for the selected filters.",
+                    "No Data", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "✅ Report generated using Visitor Pattern!\n"
+                    + "Type: " + reportType + "\n"
+                    + "Records found: " + generator.getRows().size(),
+                    "Report Ready", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+        }
 
     }//GEN-LAST:event_btnGenerateActionPerformed
+
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+
+        try {
+            boolean printed = tblReport.print();
+            if (printed) {
+                javax.swing.JOptionPane.showMessageDialog(this,
+                        "✅ Report sent to printer successfully!",
+                        "Print", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+            }
+        } catch (java.awt.print.PrinterException e) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "Print failed: " + e.getMessage(),
+                    "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+        }
+
+    }//GEN-LAST:event_jButton2ActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

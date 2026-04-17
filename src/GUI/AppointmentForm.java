@@ -1,20 +1,57 @@
 package GUI;
 
-import Model.Appointment;
-import Model.AppointmentDAO;
-import java.time.LocalDate;
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
-import javax.swing.SwingWorker;
-import javax.swing.table.DefaultTableModel;
+import java.util.List;
+import java.util.Map;
 
 public class AppointmentForm extends javax.swing.JDialog {
 
     public AppointmentForm(java.awt.Frame parent) {
         super(parent, "Appointment Form", true);
         initComponents();
+        txtDate.setToolTipText("Enter date as YYYY-MM-DD  e.g. 2025-06-15");
+        txtDate.setText("YYYY-MM-DD");
+        txtDate.setForeground(java.awt.Color.GRAY);
+
+// Clear hint on focus
+        txtDate.addFocusListener(new java.awt.event.FocusAdapter() {
+            @Override
+            public void focusGained(java.awt.event.FocusEvent e) {
+                if (txtDate.getText().equals("YYYY-MM-DD")) {
+                    txtDate.setText("");
+                    txtDate.setForeground(java.awt.Color.BLACK);
+                }
+            }
+
+            @Override
+            public void focusLost(java.awt.event.FocusEvent e) {
+                if (txtDate.getText().trim().isEmpty()) {
+                    txtDate.setText("YYYY-MM-DD");
+                    txtDate.setForeground(java.awt.Color.GRAY);
+                }
+            }
+        });
+
         setLocationRelativeTo(parent);
+        txtPatientID.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            @Override
+            public void insertUpdate(javax.swing.event.DocumentEvent e) {
+                lookupPatientName();
+            }
+
+            @Override
+            public void removeUpdate(javax.swing.event.DocumentEvent e) {
+                lookupPatientName();
+            }
+
+            @Override
+            public void changedUpdate(javax.swing.event.DocumentEvent e) {
+                lookupPatientName();
+            }
+        });
     }
+
+    // Add this field at the TOP of the class (after the class declaration line)
+    private Invoker.AppointmentManager appointmentManager = new Invoker.AppointmentManager();
 
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -27,11 +64,11 @@ public class AppointmentForm extends javax.swing.JDialog {
         jImagePanel1 = new main.JImagePanel();
         jPanel3 = new javax.swing.JPanel();
         jLabel2 = new javax.swing.JLabel();
-        txtPatientId = new javax.swing.JTextField();
+        txtPatientID = new javax.swing.JTextField();
         jLabel3 = new javax.swing.JLabel();
-        txtPatientName = new javax.swing.JTextField();
+        txtName = new javax.swing.JTextField();
         jScrollPane1 = new javax.swing.JScrollPane();
-        tblSchedule = new javax.swing.JTable();
+        appointmentTable = new javax.swing.JTable();
         jLabel4 = new javax.swing.JLabel();
         cmbDoctor = new javax.swing.JComboBox<>();
         jLabel6 = new javax.swing.JLabel();
@@ -109,32 +146,29 @@ public class AppointmentForm extends javax.swing.JDialog {
 
         jLabel2.setText("Patient ID :");
 
-        txtPatientId.addActionListener(new java.awt.event.ActionListener() {
+        txtPatientID.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                txtPatientIdActionPerformed(evt);
+                txtPatientIDActionPerformed(evt);
             }
         });
 
         jLabel3.setText("Name :");
 
-        txtPatientName.addActionListener(new java.awt.event.ActionListener() {
+        txtName.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                txtPatientNameActionPerformed(evt);
+                txtNameActionPerformed(evt);
             }
         });
 
-        tblSchedule.setModel(new javax.swing.table.DefaultTableModel(
+        appointmentTable.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
+
             },
             new String [] {
                 "Doctor /Specialist", "Date", "Time Slot", "Status (Available / Booked)"
             }
         ));
-        jScrollPane1.setViewportView(tblSchedule);
+        jScrollPane1.setViewportView(appointmentTable);
 
         jLabel4.setText("Doctor / Specialist :");
 
@@ -201,7 +235,7 @@ public class AppointmentForm extends javax.swing.JDialog {
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addComponent(jLabel3)
                         .addGap(25, 25, 25)
-                        .addComponent(txtPatientName))
+                        .addComponent(txtName))
                     .addComponent(cmbDoctor, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
@@ -210,7 +244,7 @@ public class AppointmentForm extends javax.swing.JDialog {
                             .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel3Layout.createSequentialGroup()
                                 .addComponent(jLabel2)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(txtPatientId, javax.swing.GroupLayout.PREFERRED_SIZE, 192, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addComponent(txtPatientID, javax.swing.GroupLayout.PREFERRED_SIZE, 192, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addComponent(jLabel6, javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(cmbType, javax.swing.GroupLayout.Alignment.LEADING, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(jLabel7, javax.swing.GroupLayout.Alignment.LEADING)
@@ -235,11 +269,11 @@ public class AppointmentForm extends javax.swing.JDialog {
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel2)
-                            .addComponent(txtPatientId, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(txtPatientID, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel3)
-                            .addComponent(txtPatientName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(txtName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addGap(28, 28, 28)
                         .addComponent(jLabel4)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -271,90 +305,141 @@ public class AppointmentForm extends javax.swing.JDialog {
         setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
 
-    private void txtPatientIdActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtPatientIdActionPerformed
+    private void txtPatientIDActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtPatientIDActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_txtPatientIdActionPerformed
+    }//GEN-LAST:event_txtPatientIDActionPerformed
 
-    private void txtPatientNameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtPatientNameActionPerformed
+    private void txtNameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtNameActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_txtPatientNameActionPerformed
+    }//GEN-LAST:event_txtNameActionPerformed
 
     private void btnBookActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBookActionPerformed
-        new SwingWorker<Void, Void>() {
-            @Override
-            protected Void doInBackground() {
-                try {
-                    Appointment a = new Appointment();
-                    a.setPatientId(Integer.parseInt(txtPatientId.getText().trim()));
-                    a.setPatientName(txtPatientName.getText().trim());
-                    a.setDoctor(cmbDoctor.getSelectedItem().toString());
-                    a.setType(cmbType.getSelectedItem().toString());
-                    a.setDate(LocalDate.parse(txtDate.getText().trim()));
-                    a.setTimeSlot(cmbTimeSlot.getSelectedItem().toString());
-                    a.setStatus("Booked");
+        String pidText = txtPatientID.getText().trim();
 
-                    int id = AppointmentDAO.bookAppointment(a);
-                    SwingUtilities.invokeLater(()
-                            -> JOptionPane.showMessageDialog(AppointmentForm.this, "Appointment booked, ID: " + id)
-                    );
-                } catch (Exception ex) {
-                    SwingUtilities.invokeLater(()
-                            -> JOptionPane.showMessageDialog(AppointmentForm.this,
-                                    "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE)
-                    );
-                }
-                return null;
-            }
-        }.execute();
+        if (pidText.isEmpty()) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "Please enter a Patient ID.", "Validation",
+                    javax.swing.JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        int patientId;
+        try {
+            patientId = Integer.parseInt(pidText);
+        } catch (NumberFormatException e) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "Invalid Patient ID.", "Error",
+                    javax.swing.JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        String doctor = cmbDoctor.getSelectedItem().toString();
+        String type = cmbType.getSelectedItem().toString();
+        String date = txtDate.getText().trim();
+        String timeSlot = cmbTimeSlot.getSelectedItem().toString();
+
+        if (doctor.equals("Select") || type.equals("Select") || timeSlot.equals("Select")) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "Please select Doctor, Type and Time Slot.", "Validation",
+                    javax.swing.JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        if (date.isEmpty()) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "Please enter a date (YYYY-MM-DD).", "Validation",
+                    javax.swing.JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        boolean booked = Model.AppointmentDAO.bookAppointment(
+                patientId, doctor, type, date, timeSlot);
+
+        if (booked) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "✅ Appointment booked successfully!", "Success",
+                    javax.swing.JOptionPane.INFORMATION_MESSAGE);
+            refreshAppointmentTable(patientId);   // ← auto-refresh table
+            clearFields();
+        } else {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "Failed to book appointment.", "Error",
+                    javax.swing.JOptionPane.ERROR_MESSAGE);
+        }
     }//GEN-LAST:event_btnBookActionPerformed
 
     private void btnCancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelActionPerformed
-        int row = tblSchedule.getSelectedRow();
-        if (row == -1) {
-            JOptionPane.showMessageDialog(this, "Select an appointment to cancel");
+        int selectedRow = appointmentTable.getSelectedRow();
+
+        if (selectedRow < 0) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "Please select a row from the table to cancel.",
+                    "No Row Selected", javax.swing.JOptionPane.WARNING_MESSAGE);
             return;
         }
-        int appId = Integer.parseInt(tblSchedule.getValueAt(row, 0).toString());
-        new SwingWorker<Void, Void>() {
-            @Override
-            protected Void doInBackground() {
-                try {
-                    boolean ok = AppointmentDAO.cancelAppointment(appId);
-                    SwingUtilities.invokeLater(()
-                            -> JOptionPane.showMessageDialog(AppointmentForm.this,
-                                    ok ? "Cancelled" : "Failed to cancel")
-                    );
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-                return null;
+
+        String pidText = txtPatientID.getText().trim();
+        if (pidText.isEmpty()) {
+            return;
+        }
+        int patientId = Integer.parseInt(pidText);
+
+        List<Map<String, Object>> rows
+                = Model.AppointmentDAO.getAppointments(patientId);
+
+        if (selectedRow >= rows.size()) {
+            return;
+        }
+
+        int appointmentId = (int) rows.get(selectedRow).get("appointment_id");
+
+        int confirm = javax.swing.JOptionPane.showConfirmDialog(this,
+                "Cancel this appointment?", "Confirm",
+                javax.swing.JOptionPane.YES_NO_OPTION,
+                javax.swing.JOptionPane.WARNING_MESSAGE);
+
+        if (confirm == javax.swing.JOptionPane.YES_OPTION) {
+            boolean cancelled = Model.AppointmentDAO.cancelAppointment(appointmentId);
+            if (cancelled) {
+                refreshAppointmentTable(patientId);
+                javax.swing.JOptionPane.showMessageDialog(this,
+                        "Appointment cancelled.", "Done",
+                        javax.swing.JOptionPane.INFORMATION_MESSAGE);
             }
-        }.execute();
+        }
     }//GEN-LAST:event_btnCancelActionPerformed
 
     private void btnViewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnViewActionPerformed
-        new SwingWorker<Void, Void>() {
-            @Override
-            protected Void doInBackground() {
-                try {
-                    int pid = Integer.parseInt(txtPatientId.getText().trim());
-                    var list = AppointmentDAO.getAppointmentsByPatient(pid);
-                    SwingUtilities.invokeLater(() -> {
-                        DefaultTableModel model = (DefaultTableModel) tblSchedule.getModel();
-                        model.setRowCount(0);
-                        for (Appointment a : list) {
-                            model.addRow(new Object[]{
-                                a.getAppointmentId(), a.getDoctor(), a.getType(),
-                                a.getDate(), a.getTimeSlot(), a.getStatus()
-                            });
-                        }
-                    });
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-                return null;
-            }
-        }.execute();
+        String pidText = txtPatientID.getText().trim();
+
+        if (pidText.isEmpty()) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "Please enter a Patient ID.", "Validation",
+                    javax.swing.JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        int patientId;
+        try {
+            patientId = Integer.parseInt(pidText);
+        } catch (NumberFormatException e) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "Invalid Patient ID.", "Error",
+                    javax.swing.JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        refreshAppointmentTable(patientId);
+
+        // Also load patient name
+        Model.Patient p = Model.PatientDAO.getPatientById(patientId);
+        if (p != null) {
+            txtName.setText(p.getFullName());
+        } else {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "No patient found with ID: " + patientId,
+                    "Not Found", javax.swing.JOptionPane.WARNING_MESSAGE);
+        }
     }//GEN-LAST:event_btnViewActionPerformed
 
     private void cmbDoctorActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbDoctorActionPerformed
@@ -365,8 +450,76 @@ public class AppointmentForm extends javax.swing.JDialog {
         // TODO add your handling code here:
     }//GEN-LAST:event_txtDateActionPerformed
 
+    private void refreshAppointmentTable(int patientId) {
+        List<Map<String, Object>> rows
+                = Model.AppointmentDAO.getAppointments(patientId);
+
+        javax.swing.table.DefaultTableModel tModel
+                = (javax.swing.table.DefaultTableModel) appointmentTable.getModel();
+        tModel.setRowCount(0);
+
+        for (Map<String, Object> row : rows) {
+            tModel.addRow(new Object[]{
+                row.get("doctor"),
+                row.get("appointment_date"),
+                row.get("time_slot"),
+                row.get("status")
+            });
+        }
+    }
+
+    private void clearFields() {
+        cmbDoctor.setSelectedIndex(0);
+        cmbType.setSelectedIndex(0);
+        txtDate.setText("");
+        cmbTimeSlot.setSelectedIndex(0);
+    }
+    
+    private void lookupPatientName() {
+    String pidText = txtPatientID.getText().trim();
+
+    // Clear name if field is empty or non-numeric
+    if (pidText.isEmpty()) {
+        txtName.setText("");
+        return;
+    }
+
+    int patientId;
+    try {
+        patientId = Integer.parseInt(pidText);
+    } catch (NumberFormatException e) {
+        txtName.setText("Invalid ID");
+        return;
+    }
+
+    // Run DB lookup off the EDT to keep UI responsive
+    new javax.swing.SwingWorker<String, Void>() {
+        @Override
+        protected String doInBackground() {
+            Model.Patient p = Model.PatientDAO.getPatientById(patientId);
+            return (p != null) ? p.getFullName() : null;
+        }
+
+        @Override
+        protected void done() {
+            try {
+                String name = get();
+                if (name != null) {
+                    txtName.setText(name);
+                    // Also refresh table for this patient
+                    refreshAppointmentTable(patientId);
+                } else {
+                    txtName.setText("Not found");
+                }
+            } catch (Exception ex) {
+                txtName.setText("");
+            }
+        }
+    }.execute();
+}
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JTable appointmentTable;
     private javax.swing.JButton btnBook;
     private javax.swing.JButton btnCancel;
     private javax.swing.JButton btnView;
@@ -386,9 +539,8 @@ public class AppointmentForm extends javax.swing.JDialog {
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTable tblSchedule;
     private javax.swing.JTextField txtDate;
-    private javax.swing.JTextField txtPatientId;
-    private javax.swing.JTextField txtPatientName;
+    private javax.swing.JTextField txtName;
+    private javax.swing.JTextField txtPatientID;
     // End of variables declaration//GEN-END:variables
 }

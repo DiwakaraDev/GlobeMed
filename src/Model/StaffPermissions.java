@@ -2,45 +2,29 @@ package Model;
 
 public class StaffPermissions {
     private int staffId;
-    private boolean viewRecords;
-    private boolean editRecords;
-    private boolean deleteRecords;
-    private boolean prescribeMeds;
-    private boolean accessDiagnostics;
-    private boolean approveSurgery;
-    private boolean manageBilling;
-    private boolean approveClaims;
-    private boolean manageStaff;
+    private boolean viewRecords, editRecords, deleteRecords;
+    private boolean prescribeMeds, accessDiagnostics, approveSurgery;
+    private boolean manageBilling, approveClaims, manageStaff;
 
-    public StaffPermissions() {}
+    public int getStaffId()               { return staffId; }
+    public boolean isViewRecords()        { return viewRecords; }
+    public boolean isEditRecords()        { return editRecords; }
+    public boolean isDeleteRecords()      { return deleteRecords; }
+    public boolean isPrescribeMeds()      { return prescribeMeds; }
+    public boolean isAccessDiagnostics()  { return accessDiagnostics; }
+    public boolean isApproveSurgery()     { return approveSurgery; }
+    public boolean isManageBilling()      { return manageBilling; }
+    public boolean isApproveClaims()      { return approveClaims; }
+    public boolean isManageStaff()        { return manageStaff; }
 
-    public int getStaffId() { return staffId; }
-    public void setStaffId(int staffId) { this.staffId = staffId; }
-
-    public boolean isViewRecords() { return viewRecords; }
-    public void setViewRecords(boolean viewRecords) { this.viewRecords = viewRecords; }
-
-    public boolean isEditRecords() { return editRecords; }
-    public void setEditRecords(boolean editRecords) { this.editRecords = editRecords; }
-
-    public boolean isDeleteRecords() { return deleteRecords; }
-    public void setDeleteRecords(boolean deleteRecords) { this.deleteRecords = deleteRecords; }
-
-    public boolean isPrescribeMeds() { return prescribeMeds; }
-    public void setPrescribeMeds(boolean prescribeMeds) { this.prescribeMeds = prescribeMeds; }
-
-    public boolean isAccessDiagnostics() { return accessDiagnostics; }
-    public void setAccessDiagnostics(boolean accessDiagnostics) { this.accessDiagnostics = accessDiagnostics; }
-
-    public boolean isApproveSurgery() { return approveSurgery; }
-    public void setApproveSurgery(boolean approveSurgery) { this.approveSurgery = approveSurgery; }
-
-    public boolean isManageBilling() { return manageBilling; }
-    public void setManageBilling(boolean manageBilling) { this.manageBilling = manageBilling; }
-
-    public boolean isApproveClaims() { return approveClaims; }
-    public void setApproveClaims(boolean approveClaims) { this.approveClaims = approveClaims; }
-
-    public boolean isManageStaff() { return manageStaff; }
-    public void setManageStaff(boolean manageStaff) { this.manageStaff = manageStaff; }
+    public void setStaffId(int v)              { this.staffId = v; }
+    public void setViewRecords(boolean v)      { this.viewRecords = v; }
+    public void setEditRecords(boolean v)      { this.editRecords = v; }
+    public void setDeleteRecords(boolean v)    { this.deleteRecords = v; }
+    public void setPrescribeMeds(boolean v)    { this.prescribeMeds = v; }
+    public void setAccessDiagnostics(boolean v){ this.accessDiagnostics = v; }
+    public void setApproveSurgery(boolean v)   { this.approveSurgery = v; }
+    public void setManageBilling(boolean v)    { this.manageBilling = v; }
+    public void setApproveClaims(boolean v)    { this.approveClaims = v; }
+    public void setManageStaff(boolean v)      { this.manageStaff = v; }
 }

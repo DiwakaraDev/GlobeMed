@@ -1,64 +1,88 @@
 package Model;
 
+import DB.DBConnection;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class AppointmentDAO {
-    public static int bookAppointment(Appointment a) throws SQLException {
-        String sql = "INSERT INTO appointments(patient_id, patient_name, doctor, type, date, time_slot, status) VALUES (?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
-            ps.setInt(1, a.getPatientId());
-            ps.setString(2, a.getPatientName());
-            ps.setString(3, a.getDoctor());
-            ps.setString(4, a.getType());
-            ps.setDate(5, Date.valueOf(a.getDate()));
-            ps.setString(6, a.getTimeSlot());
-            ps.setString(7, a.getStatus());
+    // ── BOOK ────────────────────────────────────────────────────────────────
+    public static boolean bookAppointment(int patientId, String doctor,
+            String type, String date, String timeSlot) {
 
-            ps.executeUpdate();
-
-            try (ResultSet rs = ps.getGeneratedKeys()) {
-                if (rs.next()) return rs.getInt(1);
-            }
+        if (patientId <= 0) {
+            System.err.println("AppointmentDAO: invalid patientId");
+            return false;
         }
-        return -1;
+
+        String sql = "INSERT INTO appointments "
+                + "(patient_id, doctor, appointment_type, appointment_date, "
+                + "time_slot, status) VALUES (?, ?, ?, ?, ?, 'Available')";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, patientId);
+            ps.setString(2, doctor);
+            ps.setString(3, type);
+            ps.setString(4, date);
+            ps.setString(5, timeSlot);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            System.err.println("AppointmentDAO.book error: " + e.getMessage());
+            return false;
+        }
     }
 
-    public static boolean cancelAppointment(int appointmentId) throws SQLException {
-        String sql = "DELETE FROM appointments WHERE appointment_id=?";
+    // ── VIEW ALL FOR PATIENT ────────────────────────────────────────────────
+    public static List<Map<String, Object>> getAppointments(int patientId) {
+        List<Map<String, Object>> list = new ArrayList<>();
+
+        String sql = "SELECT appointment_id, doctor, appointment_date, "
+                + "time_slot, status FROM appointments "
+                + "WHERE patient_id = ? ORDER BY appointment_date DESC";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, patientId);
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                Map<String, Object> row = new LinkedHashMap<>();
+                row.put("appointment_id",   rs.getInt("appointment_id"));
+                row.put("doctor",           rs.getString("doctor"));
+                row.put("appointment_date", rs.getString("appointment_date"));
+                row.put("time_slot",        rs.getString("time_slot"));
+                row.put("status",           rs.getString("status"));
+                list.add(row);
+            }
+
+        } catch (SQLException e) {
+            System.err.println("AppointmentDAO.get error: " + e.getMessage());
+        }
+        return list;
+    }
+
+    // ── CANCEL ──────────────────────────────────────────────────────────────
+    public static boolean cancelAppointment(int appointmentId) {
+
+        if (appointmentId <= 0) return false;
+
+        String sql = "UPDATE appointments SET status = 'Cancelled' "
+                + "WHERE appointment_id = ?";
+
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, appointmentId);
             return ps.executeUpdate() > 0;
-        }
-    }
 
-    public static List<Appointment> getAppointmentsByPatient(int patientId) throws SQLException {
-        String sql = "SELECT * FROM appointments WHERE patient_id=?";
-        List<Appointment> list = new ArrayList<>();
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setInt(1, patientId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    Appointment a = new Appointment();
-                    a.setAppointmentId(rs.getInt("appointment_id"));
-                    a.setPatientId(rs.getInt("patient_id"));
-                    a.setPatientName(rs.getString("patient_name"));
-                    a.setDoctor(rs.getString("doctor"));
-                    a.setType(rs.getString("type"));
-                    a.setDate(rs.getDate("date").toLocalDate());
-                    a.setTimeSlot(rs.getString("time_slot"));
-                    a.setStatus(rs.getString("status"));
-                    list.add(a);
-                }
-            }
+        } catch (SQLException e) {
+            System.err.println("AppointmentDAO.cancel error: " + e.getMessage());
+            return false;
         }
-        return list;
     }
 }

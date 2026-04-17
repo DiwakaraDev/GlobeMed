@@ -178,30 +178,34 @@ public class Login extends javax.swing.JFrame {
     }//GEN-LAST:event_txtUsernameActionPerformed
 
     private void btnSignInActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSignInActionPerformed
-        // TODO add your handling code here:
 
-            String username = txtUsername.getText().trim();
-            String password = new String(txtPassword.getPassword());
+        String username = txtUsername.getText().trim();
+        String password = new String(txtPassword.getPassword());
 
-            if (username.isEmpty() || password.isEmpty()) {
-                JOptionPane.showMessageDialog(null, "Please enter username and password", "Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
+        // ---- TEMPLATE METHOD PATTERN IN ACTION ----
+        Template.DBLoginTemplate loginProcess = new Template.DBLoginTemplate();
+        boolean success = loginProcess.login(username, password);
+        // -------------------------------------------
 
-            User user = UserDAO.authenticate(username, password);
-            if (user != null) {
+        if (success) {
+            User user = loginProcess.getAuthenticatedUser();
+            JOptionPane.showMessageDialog(null,
+                    "Welcome, " + user.getUsername() + "!\nRole: " + user.getRole(),
+                    "Login Successful", JOptionPane.INFORMATION_MESSAGE);
 
-                JOptionPane.showMessageDialog(null, "Welcome " + user.getUsername());
+            Dashboard dashboard = new Dashboard(user);
+            dashboard.setVisible(true);
+            this.dispose();
 
-                Dashboard dashboard = new Dashboard(user);
-                dashboard.setVisible(true);
-
-                SwingUtilities.getWindowAncestor(btnSignIn).dispose();
-            } else {
-                JOptionPane.showMessageDialog(null, "Invalid username or password", "Error", JOptionPane.ERROR_MESSAGE);
-            }
-   
-
+        } else if (username.isEmpty() || password.isEmpty()) {
+            JOptionPane.showMessageDialog(null,
+                    "Please enter username and password.",
+                    "Validation Error", JOptionPane.WARNING_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(null,
+                    "Invalid username or password.",
+                    "Login Failed", JOptionPane.ERROR_MESSAGE);
+        }
     }//GEN-LAST:event_btnSignInActionPerformed
 
     public static void main(String args[]) {

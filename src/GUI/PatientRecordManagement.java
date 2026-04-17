@@ -401,6 +401,11 @@ public class PatientRecordManagement extends javax.swing.JDialog {
         jButton7.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         jButton7.setForeground(new java.awt.Color(255, 255, 255));
         jButton7.setText("Delete");
+        jButton7.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton7ActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
         jPanel5.setLayout(jPanel5Layout);
@@ -491,11 +496,21 @@ public class PatientRecordManagement extends javax.swing.JDialog {
         jButton8.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         jButton8.setForeground(new java.awt.Color(255, 255, 255));
         jButton8.setText("Save Plan");
+        jButton8.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton8ActionPerformed(evt);
+            }
+        });
 
         jButton9.setBackground(new java.awt.Color(0, 51, 0));
         jButton9.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         jButton9.setForeground(new java.awt.Color(255, 255, 255));
         jButton9.setText("Update Plan");
+        jButton9.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton9ActionPerformed(evt);
+            }
+        });
 
         jButton10.setBackground(new java.awt.Color(153, 0, 0));
         jButton10.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
@@ -632,129 +647,333 @@ public class PatientRecordManagement extends javax.swing.JDialog {
     }//GEN-LAST:event_txtDOBActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        // TODO add your handling code here:
+        txtPatientID.setText("");
+        txtName.setText("");
+        txtDOB.setText("");
+        txtContact.setText("");
+        txtAddress.setText("");
+        grpGender.clearSelection();
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
-        // TODO add your handling code here:
-
         new javax.swing.SwingWorker<Void, Void>() {
+            @Override
             protected Void doInBackground() {
                 try {
                     String name = txtName.getText().trim();
                     String dobStr = txtDOB.getText().trim();
-                    java.time.LocalDate dob = dobStr.isEmpty() ? null : java.time.LocalDate.parse(dobStr);
-                    String gender = rbMale.isSelected() ? "Male" : rbFemale.isSelected() ? "Female" : "Other";
                     String contact = txtContact.getText().trim();
                     String address = txtAddress.getText().trim();
+                    String gender = rbMale.isSelected() ? "Male"
+                            : rbFemale.isSelected() ? "Female" : "Other";
 
-                    Patient p = new Patient();
-                    p.setFullName(name);
-                    p.setDob(dob);
-                    p.setGender(gender);
-                    p.setContact(contact);
-                    p.setAddress(address);
+                    if (name.isEmpty()) {
+                        javax.swing.SwingUtilities.invokeLater(()
+                                -> javax.swing.JOptionPane.showMessageDialog(
+                                        PatientRecordManagement.this,
+                                        "Please enter the patient name.", "Validation",
+                                        javax.swing.JOptionPane.WARNING_MESSAGE));
+                        return null;
+                    }
 
-                    int newId = PatientDAO.createPatient(p);
+                    java.time.LocalDate dob = null;
+                    if (!dobStr.isEmpty()) {
+                        try {
+                            dob = java.time.LocalDate.parse(dobStr);
+                        } catch (java.time.format.DateTimeParseException ex) {
+                            javax.swing.SwingUtilities.invokeLater(()
+                                    -> javax.swing.JOptionPane.showMessageDialog(
+                                            PatientRecordManagement.this,
+                                            "Invalid DOB format. Use YYYY-MM-DD", "Date Error",
+                                            javax.swing.JOptionPane.WARNING_MESSAGE));
+                            return null;
+                        }
+                    }
+
+                    // ---- BUILDER PATTERN ----
+                    Model.Patient p = new Builder.PatientBuilder()
+                            .setFullName(name)
+                            .setDob(dob)
+                            .setGender(gender)
+                            .setContact(contact)
+                            .setAddress(address)
+                            .build();
+                    // -------------------------
+
+                    int newId = Model.PatientDAO.createPatient(p);
 
                     javax.swing.SwingUtilities.invokeLater(() -> {
                         txtPatientID.setText(String.valueOf(newId));
-                        javax.swing.JOptionPane.showMessageDialog(PatientRecordManagement.this, "Saved patient ID: " + newId);
+                        // ✅ FIX: sync to Medical History search field too
+                        txtSearchID.setText(String.valueOf(newId));
+
+                        javax.swing.JOptionPane.showMessageDialog(
+                                PatientRecordManagement.this,
+                                "✅ Patient saved using Builder Pattern!\nPatient ID: " + newId,
+                                "Saved", javax.swing.JOptionPane.INFORMATION_MESSAGE);
                     });
 
                 } catch (Exception ex) {
-                    ex.printStackTrace();
                     javax.swing.SwingUtilities.invokeLater(()
-                            -> javax.swing.JOptionPane.showMessageDialog(PatientRecordManagement.this, "Error saving patient: " + ex.getMessage(), "Error", javax.swing.JOptionPane.ERROR_MESSAGE)
+                            -> javax.swing.JOptionPane.showMessageDialog(
+                                    PatientRecordManagement.this,
+                                    "Error: " + ex.getMessage(), "Error",
+                                    javax.swing.JOptionPane.ERROR_MESSAGE));
+                }
+                return null;
+            }
+        }.execute();
+    }//GEN-LAST:event_jButton3ActionPerformed
+
+    private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
+        int selectedRow = historyTable.getSelectedRow();
+
+        if (selectedRow < 0) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "Please select a row from the table to update.",
+                    "No Row Selected", javax.swing.JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // Read current values directly from the selected table row
+        String currentDiagnosis = String.valueOf(historyTable.getValueAt(selectedRow, 1));
+        String currentAllergies = String.valueOf(historyTable.getValueAt(selectedRow, 2));
+        String currentTreatment = String.valueOf(historyTable.getValueAt(selectedRow, 3));
+
+        // Get history_id from DAO using patient + row index
+        String pidText = txtPatientID.getText().trim();
+        if (pidText.isEmpty()) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "No patient loaded. Search a patient first.",
+                    "Validation", javax.swing.JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        int patientId = Integer.parseInt(pidText);
+
+        // Fetch history list to get the correct history_id
+        java.util.List<java.util.Map<String, Object>> rows
+                = Model.MedicalHistoryDAO.getHistoryForPatient(patientId);
+
+        if (selectedRow >= rows.size()) {
+            return;
+        }
+
+        int historyId = (int) rows.get(selectedRow).get("history_id");
+
+        // ---- Open update dialog (no data in main form fields) ----
+        javax.swing.JPanel panel = new javax.swing.JPanel(new java.awt.GridLayout(6, 2, 8, 8));
+
+        javax.swing.JTextField dlgDiagnosis = new javax.swing.JTextField(currentDiagnosis);
+        javax.swing.JTextField dlgAllergies = new javax.swing.JTextField(currentAllergies);
+        javax.swing.JTextField dlgTreatment = new javax.swing.JTextField(currentTreatment);
+
+        panel.add(new javax.swing.JLabel("Diagnosis:"));
+        panel.add(dlgDiagnosis);
+        panel.add(new javax.swing.JLabel("Allergies:"));
+        panel.add(dlgAllergies);
+        panel.add(new javax.swing.JLabel("Previous Treatment:"));
+        panel.add(dlgTreatment);
+
+        int result = javax.swing.JOptionPane.showConfirmDialog(
+                this, panel,
+                "Update Medical History (ID: " + historyId + ")",
+                javax.swing.JOptionPane.OK_CANCEL_OPTION,
+                javax.swing.JOptionPane.PLAIN_MESSAGE);
+
+        if (result == javax.swing.JOptionPane.OK_OPTION) {
+            String newDiagnosis = dlgDiagnosis.getText().trim();
+            String newAllergies = dlgAllergies.getText().trim();
+            String newTreatment = dlgTreatment.getText().trim();
+
+            if (newDiagnosis.isEmpty()) {
+                javax.swing.JOptionPane.showMessageDialog(this,
+                        "Diagnosis cannot be empty.", "Validation",
+                        javax.swing.JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            boolean updated = Model.MedicalHistoryDAO.updateHistory(
+                    historyId, newDiagnosis, newAllergies, newTreatment);
+
+            if (updated) {
+                // Refresh table without touching input fields
+                refreshHistoryTable(patientId);
+                javax.swing.JOptionPane.showMessageDialog(this,
+                        "✅ Record updated successfully!", "Updated",
+                        javax.swing.JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                javax.swing.JOptionPane.showMessageDialog(this,
+                        "Update failed.", "Error",
+                        javax.swing.JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }//GEN-LAST:event_jButton6ActionPerformed
+
+    private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
+        String pidText = txtPatientID.getText().trim();
+
+        if (pidText.isEmpty() || pidText.equals("0")) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "Save a patient first to get a Patient ID.", "Validation",
+                    javax.swing.JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        int patientId;
+        try {
+            patientId = Integer.parseInt(pidText);
+        } catch (NumberFormatException e) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "Invalid Patient ID.", "Error",
+                    javax.swing.JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        String diagnosis = jTextField6.getText().trim();
+        String allergies = jTextField7.getText().trim();
+        String notes = jTextField8.getText().trim();
+
+        if (diagnosis.isEmpty()) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "Please enter a diagnosis.", "Validation",
+                    javax.swing.JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        boolean ok = Model.MedicalHistoryDAO.addHistory(patientId, diagnosis, allergies, notes);
+
+        if (ok) {
+            jTextField6.setText("");
+            jTextField7.setText("");
+            jTextField8.setText("");
+
+            // ✅ FIX: refresh history table immediately
+            java.util.List<java.util.Map<String, Object>> rows
+                    = Model.MedicalHistoryDAO.getHistoryForPatient(patientId);
+            javax.swing.table.DefaultTableModel tModel
+                    = (javax.swing.table.DefaultTableModel) historyTable.getModel();
+            tModel.setRowCount(0);
+            for (java.util.Map<String, Object> row : rows) {
+                tModel.addRow(new Object[]{
+                    row.get("visit_date"),
+                    row.get("diagnosis"),
+                    row.get("allergies"),
+                    row.get("previous_treatment")
+                });
+            }
+
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "✅ Medical history record added!", "Success",
+                    javax.swing.JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "Failed to save. Make sure patient exists first.", "Error",
+                    javax.swing.JOptionPane.ERROR_MESSAGE);
+        }
+    }//GEN-LAST:event_jButton5ActionPerformed
+
+    private void btnUpdateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUpdateActionPerformed
+        new javax.swing.SwingWorker<Void, Void>() {
+            @Override
+            protected Void doInBackground() {
+                try {
+                    int id = Integer.parseInt(txtPatientID.getText().trim());
+                    String dobStr = txtDOB.getText().trim();
+                    java.time.LocalDate dob = dobStr.isEmpty()
+                            ? null : java.time.LocalDate.parse(dobStr);
+
+                    // Reuse Builder for update too
+                    Model.Patient p = new Builder.PatientBuilder()
+                            .setFullName(txtName.getText().trim())
+                            .setDob(dob)
+                            .setGender(rbMale.isSelected() ? "Male" : rbFemale.isSelected() ? "Female" : "Other")
+                            .setContact(txtContact.getText().trim())
+                            .setAddress(txtAddress.getText().trim())
+                            .build();
+                    p.setPatientId(id);
+
+                    boolean ok = Model.PatientDAO.updatePatient(p);
+                    javax.swing.SwingUtilities.invokeLater(()
+                            -> javax.swing.JOptionPane.showMessageDialog(
+                                    PatientRecordManagement.this,
+                                    ok ? "✅ Patient updated!" : "❌ Update failed.",
+                                    "Update", javax.swing.JOptionPane.INFORMATION_MESSAGE)
+                    );
+                } catch (Exception ex) {
+                    javax.swing.SwingUtilities.invokeLater(()
+                            -> javax.swing.JOptionPane.showMessageDialog(
+                                    PatientRecordManagement.this,
+                                    "Error: " + ex.getMessage(), "Error",
+                                    javax.swing.JOptionPane.ERROR_MESSAGE)
                     );
                 }
                 return null;
             }
         }.execute();
-
-    }//GEN-LAST:event_jButton3ActionPerformed
-
-    private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jButton6ActionPerformed
-
-    private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jButton5ActionPerformed
-
-    private void btnUpdateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUpdateActionPerformed
-        // TODO add your handling code here:
-        btnUpdate.addActionListener(e -> {
-            new javax.swing.SwingWorker<Void, Void>() {
-                protected Void doInBackground() {
-                    try {
-                        int id = Integer.parseInt(txtPatientID.getText().trim());
-                        Patient p = new Patient();
-                        p.setPatientId(id);
-                        p.setFullName(txtName.getText().trim());
-                        String dobStr = txtDOB.getText().trim();
-                        if (!dobStr.isEmpty()) {
-                            p.setDob(java.time.LocalDate.parse(dobStr));
-                        }
-                        p.setGender(rbMale.isSelected() ? "Male" : rbFemale.isSelected() ? "Female" : "Other");
-                        p.setContact(txtContact.getText().trim());
-                        p.setAddress(txtAddress.getText().trim());
-
-                        boolean ok = PatientDAO.updatePatient(p);
-                        javax.swing.SwingUtilities.invokeLater(() -> {
-                            if (ok) {
-                                javax.swing.JOptionPane.showMessageDialog(PatientRecordManagement.this, "Patient updated.");
-                            } else {
-                                javax.swing.JOptionPane.showMessageDialog(PatientRecordManagement.this, "No patient updated.");
-                            }
-                        });
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                        javax.swing.SwingUtilities.invokeLater(()
-                                -> javax.swing.JOptionPane.showMessageDialog(PatientRecordManagement.this, "Error updating: " + ex.getMessage(), "Error", javax.swing.JOptionPane.ERROR_MESSAGE)
-                        );
-                    }
-                    return null;
-                }
-            }.execute();
-        });
-
     }//GEN-LAST:event_btnUpdateActionPerformed
 
     private void btnSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSearchActionPerformed
-        // TODO add your handling code here:
-        btnSearch.addActionListener(e -> {
-            new javax.swing.SwingWorker<Void, Void>() {
-                protected Void doInBackground() {
-                    try {
-                        int id = Integer.parseInt(txtSearchID.getText().trim());
-                        java.util.List<java.util.Map<String, Object>> rows = MedicalHistoryDAO.getHistoryForPatient(id);
+        String idText = txtSearchID.getText().trim();
 
-                        javax.swing.SwingUtilities.invokeLater(() -> {
-                            javax.swing.table.DefaultTableModel model = (javax.swing.table.DefaultTableModel) historyTable.getModel();
-                            model.setRowCount(0);
-                            for (var r : rows) {
-                                model.addRow(new Object[]{
-                                    r.get("visit_date"),
-                                    r.get("diagnosis"),
-                                    r.get("allergies"),
-                                    r.get("previous_treatment")
-                                });
-                            }
+        if (idText.isEmpty()) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "Please enter a Patient ID to search.", "Validation",
+                    javax.swing.JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        int id;
+        try {
+            id = Integer.parseInt(idText);
+        } catch (NumberFormatException e) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "Patient ID must be a number.", "Validation",
+                    javax.swing.JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        new javax.swing.SwingWorker<java.util.List<java.util.Map<String, Object>>, Void>() {
+            @Override
+            protected java.util.List<java.util.Map<String, Object>> doInBackground() {
+                return Model.MedicalHistoryDAO.getHistoryForPatient(id);
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    java.util.List<java.util.Map<String, Object>> rows = get();
+
+                    // ✅ FIX: sync ID to Personal Details field
+                    txtPatientID.setText(String.valueOf(id));
+
+                    javax.swing.table.DefaultTableModel tModel
+                            = (javax.swing.table.DefaultTableModel) historyTable.getModel();
+                    tModel.setRowCount(0);
+
+                    for (java.util.Map<String, Object> row : rows) {
+                        tModel.addRow(new Object[]{
+                            row.get("visit_date"),
+                            row.get("diagnosis"),
+                            row.get("allergies"),
+                            row.get("previous_treatment")
                         });
-                    } catch (NumberFormatException nfe) {
-                        javax.swing.SwingUtilities.invokeLater(() -> javax.swing.JOptionPane.showMessageDialog(PatientRecordManagement.this, "Enter a valid patient ID"));
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                        javax.swing.SwingUtilities.invokeLater(()
-                                -> javax.swing.JOptionPane.showMessageDialog(PatientRecordManagement.this, "Error searching: " + ex.getMessage(), "Error", javax.swing.JOptionPane.ERROR_MESSAGE)
-                        );
                     }
-                    return null;
-                }
-            }.execute();
-        });
 
+                    if (rows.isEmpty()) {
+                        javax.swing.JOptionPane.showMessageDialog(
+                                PatientRecordManagement.this,
+                                "No history found for Patient ID: " + id,
+                                "No Records", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+                    }
+
+                } catch (Exception ex) {
+                    javax.swing.JOptionPane.showMessageDialog(
+                            PatientRecordManagement.this,
+                            "Search error: " + ex.getMessage(), "Error",
+                            javax.swing.JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }.execute();
     }//GEN-LAST:event_btnSearchActionPerformed
 
     private void rbMaleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rbMaleActionPerformed
@@ -762,13 +981,236 @@ public class PatientRecordManagement extends javax.swing.JDialog {
     }//GEN-LAST:event_rbMaleActionPerformed
 
     private void jButton10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton10ActionPerformed
-        // TODO add your handling code here:
+        javax.swing.JOptionPane.showMessageDialog(this,
+                "Treatment Plan Report\n\n"
+                + "Patient ID   : " + jTextField9.getText() + "\n"
+                + "Doctor       : " + jComboBox1.getSelectedItem() + "\n"
+                + "Prescription : " + jTextArea2.getText() + "\n"
+                + "Next Appt    : " + jTextField10.getText() + "\n"
+                + "Instructions : " + jTextArea3.getText(),
+                "Treatment Report", javax.swing.JOptionPane.INFORMATION_MESSAGE);
     }//GEN-LAST:event_jButton10ActionPerformed
 
     private void jTextField9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField9ActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_jTextField9ActionPerformed
 
+    private void jButton8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton8ActionPerformed
+        String pidText = jTextField9.getText().trim();
+
+        if (pidText.isEmpty()) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "Patient ID is empty.\nPlease save a patient first or search one in Medical History tab.",
+                    "Validation", javax.swing.JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        int patientId;
+        try {
+            patientId = Integer.parseInt(pidText);
+        } catch (NumberFormatException e) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "Invalid Patient ID.", "Error",
+                    javax.swing.JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        String doctor = jComboBox1.getSelectedItem().toString();
+        String prescription = jTextArea2.getText().trim();
+        String nextAppt = jTextField10.getText().trim();
+        String instructions = jTextArea3.getText().trim();
+
+        if (doctor.equals("Select")) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "Please select a doctor.", "Validation",
+                    javax.swing.JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        if (prescription.isEmpty()) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "Please enter a prescription.", "Validation",
+                    javax.swing.JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        boolean saved = Model.TreatmentPlanDAO.savePlan(
+                patientId, doctor, prescription, nextAppt, instructions);
+
+        if (saved) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "✅ Treatment plan saved!", "Saved",
+                    javax.swing.JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "Failed to save treatment plan.", "Error",
+                    javax.swing.JOptionPane.ERROR_MESSAGE);
+        }
+    }//GEN-LAST:event_jButton8ActionPerformed
+
+    private void jButton9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton9ActionPerformed
+        String pidText = jTextField9.getText().trim();
+
+        if (pidText.isEmpty()) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "Patient ID is empty. Save a patient first.",
+                    "Validation", javax.swing.JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        int patientId;
+        try {
+            patientId = Integer.parseInt(pidText);
+        } catch (NumberFormatException e) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "Invalid Patient ID.", "Error",
+                    javax.swing.JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // ---- Fetch latest plan from DB ----
+        java.util.Map<String, Object> existing
+                = Model.TreatmentPlanDAO.getLatestPlan(patientId);
+
+        if (existing.isEmpty()) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "No treatment plan found for Patient ID: " + patientId
+                    + ".\nPlease save a plan first.",
+                    "Not Found", javax.swing.JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        int planId = (int) existing.get("plan_id");
+
+        // ---- Build update dialog — design pattern intact, no form fields touched ----
+        javax.swing.JPanel panel = new javax.swing.JPanel(
+                new java.awt.GridLayout(8, 2, 8, 8));
+
+        String[] doctors = {"Dr. Jayasekara", "Dr. Wijewardana", "Dr. Senanayaka"};
+        javax.swing.JComboBox<String> dlgDoctor
+                = new javax.swing.JComboBox<>(doctors);
+        dlgDoctor.setSelectedItem(existing.get("doctor_assigned"));
+
+        javax.swing.JTextArea dlgPrescription = new javax.swing.JTextArea(3, 20);
+        dlgPrescription.setText(
+                existing.get("prescription") != null
+                ? existing.get("prescription").toString() : "");
+        dlgPrescription.setLineWrap(true);
+
+        javax.swing.JTextField dlgNextAppt = new javax.swing.JTextField(
+                existing.get("next_appointment") != null
+                ? existing.get("next_appointment").toString() : "");
+
+        javax.swing.JTextArea dlgInstructions = new javax.swing.JTextArea(3, 20);
+        dlgInstructions.setText(
+                existing.get("special_instructions") != null
+                ? existing.get("special_instructions").toString() : "");
+        dlgInstructions.setLineWrap(true);
+
+        panel.add(new javax.swing.JLabel("Doctor Assigned:"));
+        panel.add(dlgDoctor);
+        panel.add(new javax.swing.JLabel("Prescription:"));
+        panel.add(new javax.swing.JScrollPane(dlgPrescription));
+        panel.add(new javax.swing.JLabel("Next Appointment:"));
+        panel.add(dlgNextAppt);
+        panel.add(new javax.swing.JLabel("Special Instructions:"));
+        panel.add(new javax.swing.JScrollPane(dlgInstructions));
+
+        int result = javax.swing.JOptionPane.showConfirmDialog(
+                this, panel,
+                "Update Treatment Plan (Plan ID: " + planId + ")",
+                javax.swing.JOptionPane.OK_CANCEL_OPTION,
+                javax.swing.JOptionPane.PLAIN_MESSAGE);
+
+        if (result == javax.swing.JOptionPane.OK_OPTION) {
+            String doctor = dlgDoctor.getSelectedItem().toString();
+            String prescription = dlgPrescription.getText().trim();
+            String nextAppt = dlgNextAppt.getText().trim();
+            String instructions = dlgInstructions.getText().trim();
+
+            if (prescription.isEmpty()) {
+                javax.swing.JOptionPane.showMessageDialog(this,
+                        "Prescription cannot be empty.", "Validation",
+                        javax.swing.JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            boolean updated = Model.TreatmentPlanDAO.updatePlan(
+                    planId, doctor, prescription, nextAppt, instructions);
+
+            if (updated) {
+                javax.swing.JOptionPane.showMessageDialog(this,
+                        "✅ Treatment plan updated successfully!",
+                        "Updated", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                javax.swing.JOptionPane.showMessageDialog(this,
+                        "Update failed.", "Error",
+                        javax.swing.JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }//GEN-LAST:event_jButton9ActionPerformed
+
+    private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton7ActionPerformed
+        int selectedRow = historyTable.getSelectedRow();
+
+        if (selectedRow < 0) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "Please select a row from the table to delete.",
+                    "No Row Selected", javax.swing.JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        String pidText = txtPatientID.getText().trim();
+        if (pidText.isEmpty()) {
+            return;
+        }
+        int patientId = Integer.parseInt(pidText);
+
+        java.util.List<java.util.Map<String, Object>> rows
+                = Model.MedicalHistoryDAO.getHistoryForPatient(patientId);
+
+        if (selectedRow >= rows.size()) {
+            return;
+        }
+        int historyId = (int) rows.get(selectedRow).get("history_id");
+
+        int confirm = javax.swing.JOptionPane.showConfirmDialog(this,
+                "Are you sure you want to delete this record?",
+                "Confirm Delete", javax.swing.JOptionPane.YES_NO_OPTION,
+                javax.swing.JOptionPane.WARNING_MESSAGE);
+
+        if (confirm == javax.swing.JOptionPane.YES_OPTION) {
+            boolean deleted = Model.MedicalHistoryDAO.deleteHistory(historyId);
+            if (deleted) {
+                refreshHistoryTable(patientId);
+                javax.swing.JOptionPane.showMessageDialog(this,
+                        "🗑️ Record deleted.", "Deleted",
+                        javax.swing.JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                javax.swing.JOptionPane.showMessageDialog(this,
+                        "Delete failed.", "Error",
+                        javax.swing.JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }//GEN-LAST:event_jButton7ActionPerformed
+
+    private void refreshHistoryTable(int patientId) {
+        java.util.List<java.util.Map<String, Object>> rows
+                = Model.MedicalHistoryDAO.getHistoryForPatient(patientId);
+
+        javax.swing.table.DefaultTableModel tModel
+                = (javax.swing.table.DefaultTableModel) historyTable.getModel();
+        tModel.setRowCount(0);
+
+        for (java.util.Map<String, Object> row : rows) {
+            tModel.addRow(new Object[]{
+                row.get("visit_date"),
+                row.get("diagnosis"),
+                row.get("allergies"),
+                row.get("previous_treatment")
+            });
+        }
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnSearch;

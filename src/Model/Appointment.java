@@ -1,40 +1,39 @@
 package Model;
 
-import java.time.LocalDate;
-
 public class Appointment {
-    private int appointmentId;
-    private int patientId;
+    private int    appointmentId;
+    private int    patientId;
     private String patientName;
     private String doctor;
     private String type;
-    private LocalDate date;
+    private String appointmentDate;   // stored as String "YYYY-MM-DD"
     private String timeSlot;
     private String status;
 
     public Appointment() {}
 
-    public int getAppointmentId() { return appointmentId; }
-    public void setAppointmentId(int appointmentId) { this.appointmentId = appointmentId; }
+    // Getters
+    public int    getAppointmentId()      { return appointmentId; }
+    public int    getPatientId()          { return patientId; }
+    public String getPatientName()        { return patientName; }
+    public String getDoctor()             { return doctor; }
+    public String getType()              { return type; }
+    public String getAppointmentDate()   { return appointmentDate; }
+    public String getTimeSlot()          { return timeSlot; }
+    public String getStatus()            { return status; }
 
-    public int getPatientId() { return patientId; }
-    public void setPatientId(int patientId) { this.patientId = patientId; }
+    // Setters — String version (used by DAO & form)
+    public void setAppointmentId(int v)       { this.appointmentId = v; }
+    public void setPatientId(int v)           { this.patientId = v; }
+    public void setPatientName(String v)      { this.patientName = v; }
+    public void setDoctor(String v)           { this.doctor = v; }
+    public void setType(String v)             { this.type = v; }
+    public void setAppointmentDate(String v)  { this.appointmentDate = v; }
+    public void setTimeSlot(String v)         { this.timeSlot = v; }
+    public void setStatus(String v)           { this.status = v; }
 
-    public String getPatientName() { return patientName; }
-    public void setPatientName(String patientName) { this.patientName = patientName; }
-
-    public String getDoctor() { return doctor; }
-    public void setDoctor(String doctor) { this.doctor = doctor; }
-
-    public String getType() { return type; }
-    public void setType(String type) { this.type = type; }
-
-    public LocalDate getDate() { return date; }
-    public void setDate(LocalDate date) { this.date = date; }
-
-    public String getTimeSlot() { return timeSlot; }
-    public void setTimeSlot(String timeSlot) { this.timeSlot = timeSlot; }
-
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    // ✅ Convenience setter — accepts LocalDate, converts to String
+    public void setDate(java.time.LocalDate date) {
+        this.appointmentDate = (date != null) ? date.toString() : "";
+    }
 }

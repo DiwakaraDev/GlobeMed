@@ -1,31 +1,30 @@
 package Model;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import DB.DBConnection;
+import java.sql.*;
 
 public class UserDAO {
+
     public static User authenticate(String username, String password) {
-        String sql = "SELECT * FROM users WHERE username=? AND password=?";
+        String sql = "SELECT id, username, role FROM users "
+                   + "WHERE username = ? AND password = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, username);
-            ps.setString(2, password); 
+            ps.setString(2, password);   // use hashed password in production
+            ResultSet rs = ps.executeQuery();
 
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    User user = new User();
-                    user.setUserId(rs.getInt("user_id"));
-                    user.setUsername(rs.getString("username"));
-                    user.setRole(rs.getString("role"));
-                    return user;
-                }
+            if (rs.next()) {
+                return new User(
+                    rs.getInt("id"),
+                    rs.getString("username"),
+                    rs.getString("role")
+                );
             }
-
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (SQLException e) {
+            System.err.println("Auth error: " + e.getMessage());
         }
-        return null; 
+        return null;
     }
 }

@@ -1,6 +1,5 @@
 package GUI;
 
-
 public class BillingForm extends javax.swing.JDialog {
 
     public BillingForm(java.awt.Frame parent) {
@@ -8,6 +7,8 @@ public class BillingForm extends javax.swing.JDialog {
         initComponents();
         setLocationRelativeTo(parent);
     }
+
+    private double currentSubtotal = 0.0;   // ← This is fine ✅
 
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -167,16 +168,31 @@ public class BillingForm extends javax.swing.JDialog {
         jButton1.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         jButton1.setForeground(new java.awt.Color(255, 255, 255));
         jButton1.setText("Generate Bill");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
 
         jButton2.setBackground(new java.awt.Color(0, 102, 51));
         jButton2.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         jButton2.setForeground(new java.awt.Color(255, 255, 255));
         jButton2.setText("Print Bill");
+        jButton2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton2ActionPerformed(evt);
+            }
+        });
 
         jButton3.setBackground(new java.awt.Color(0, 0, 0));
         jButton3.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         jButton3.setForeground(new java.awt.Color(255, 255, 255));
         jButton3.setText("Clear");
+        jButton3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton3ActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -312,16 +328,31 @@ public class BillingForm extends javax.swing.JDialog {
         jButton4.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         jButton4.setForeground(new java.awt.Color(255, 255, 255));
         jButton4.setText("Submit Claim");
+        jButton4.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton4ActionPerformed(evt);
+            }
+        });
 
         jButton5.setBackground(new java.awt.Color(0, 0, 0));
         jButton5.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         jButton5.setForeground(new java.awt.Color(255, 255, 255));
         jButton5.setText("Track Claim");
+        jButton5.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton5ActionPerformed(evt);
+            }
+        });
 
         jButton6.setBackground(new java.awt.Color(0, 102, 51));
         jButton6.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         jButton6.setForeground(new java.awt.Color(255, 255, 255));
         jButton6.setText("Generate Report");
+        jButton6.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton6ActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
@@ -457,6 +488,171 @@ public class BillingForm extends javax.swing.JDialog {
     private void jComboBox3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBox3ActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_jComboBox3ActionPerformed
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        try {
+            // Read subtotal from table rows
+            double subtotal = 0.0;
+            javax.swing.table.DefaultTableModel model
+                    = (javax.swing.table.DefaultTableModel) jTable1.getModel();
+
+            for (int i = 0; i < model.getRowCount(); i++) {
+                Object val = model.getValueAt(i, 3); // "Total" column
+                if (val != null && !val.toString().isEmpty()) {
+                    subtotal += Double.parseDouble(val.toString());
+                }
+            }
+
+            if (subtotal == 0.0) {
+                // Demo mode: use a sample value if table is empty
+                subtotal = 5000.00;
+            }
+
+            currentSubtotal = subtotal;
+
+            // ---- DECORATOR PATTERN IN ACTION ----
+            Decorator.BillingService billing = new Decorator.BaseBilling(subtotal);
+            // Wrap with Tax
+            billing = new Decorator.TaxDecorator(billing);
+            // Wrap with Insurance Deduction
+            billing = new Decorator.InsuranceDecorator(billing, 500.00);
+            // --------------------------------------
+
+            double finalAmount = billing.calculateTotal();
+            String description = billing.getDescription();
+
+            // Update UI fields
+            jTextField3.setText(String.format("%.2f", subtotal));
+            jTextField4.setText(description);
+            jTextField5.setText(String.format("%.2f", finalAmount));
+
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "Bill Generated!\n\n"
+                    + "Subtotal  : Rs. " + String.format("%.2f", subtotal) + "\n"
+                    + "After Tax : Rs. " + String.format("%.2f", subtotal * 1.08) + "\n"
+                    + "After Insurance Deduction: Rs. " + String.format("%.2f", finalAmount) + "\n\n"
+                    + "Breakdown: " + description,
+                    "Bill Summary", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+
+        } catch (Exception ex) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "Error generating bill: " + ex.getMessage(),
+                    "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+        }
+    }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+        if (jTextField5.getText().isEmpty()) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "Please generate the bill first.", "Warning",
+                    javax.swing.JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        javax.swing.JOptionPane.showMessageDialog(this,
+                "Printing bill for Patient: " + jTextField2.getText() + "\n"
+                + "Final Amount: Rs. " + jTextField5.getText(),
+                "Print", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+    }//GEN-LAST:event_jButton2ActionPerformed
+
+    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
+        jTextField1.setText("");
+        jTextField2.setText("");
+        jTextField3.setText("");
+        jTextField4.setText("");
+        jTextField5.setText("");
+        ((javax.swing.table.DefaultTableModel) jTable1.getModel()).setRowCount(0);
+        currentSubtotal = 0.0;
+    }//GEN-LAST:event_jButton3ActionPerformed
+
+    private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
+        try {
+            // Build claim request from form inputs
+            String patientName = jTextField8.getText().trim();
+            String provider = jComboBox1.getSelectedItem().toString();
+            String claimType = jComboBox2.getSelectedItem().toString();
+            String policyNumber = jTextField10.getText().trim();
+            String claimAmountStr = jTextField9.getText().trim();
+
+            if (claimAmountStr.isEmpty()) {
+                javax.swing.JOptionPane.showMessageDialog(this,
+                        "Please enter a claim amount.", "Validation",
+                        javax.swing.JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            double claimAmount = Double.parseDouble(claimAmountStr);
+
+            Chain.ClaimRequest claim = new Chain.ClaimRequest(
+                    patientName, provider, claimType, claimAmount, policyNumber
+            );
+
+            // ---- CHAIN OF RESPONSIBILITY IN ACTION ----
+            Chain.ClaimHandler validator = new Chain.ValidationHandler();
+            Chain.ClaimHandler verifier = new Chain.VerificationHandler();
+            Chain.ClaimHandler approver = new Chain.ApprovalHandler();
+
+            // Build the chain: Validation → Verification → Approval
+            validator.setNextHandler(verifier);
+            verifier.setNextHandler(approver);
+
+            // Start the chain — only call the first handler
+            validator.processRequest(claim);
+            // -------------------------------------------
+
+            // Update status combo and remarks in UI
+            jComboBox3.setSelectedItem(claim.getStatus().contains("Approved") ? "Approved"
+                    : claim.getStatus().contains("Rejected") ? "Rejected" : "Pending");
+            jTextArea1.setText(claim.getRemarks());
+
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "Claim processed!\n\n"
+                    + "Patient   : " + claim.getPatientName() + "\n"
+                    + "Provider  : " + claim.getInsuranceProvider() + "\n"
+                    + "Amount    : Rs. " + claim.getClaimAmount() + "\n"
+                    + "Status    : " + claim.getStatus() + "\n"
+                    + "Remarks   : " + claim.getRemarks(),
+                    "Claim Result", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+
+        } catch (NumberFormatException ex) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "Invalid claim amount. Please enter a number.",
+                    "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+        }
+    }//GEN-LAST:event_jButton4ActionPerformed
+
+    private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
+        String status = jComboBox3.getSelectedItem().toString();
+        String remarks = jTextArea1.getText();
+
+        if (status.equals("Select Status") || remarks.isEmpty()) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "No claim submitted yet. Submit a claim first.",
+                    "Track Claim", javax.swing.JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        javax.swing.JOptionPane.showMessageDialog(this,
+                "Current Claim Status: " + status + "\nRemarks: " + remarks,
+                "Claim Tracking", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+
+    }//GEN-LAST:event_jButton5ActionPerformed
+
+    private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
+        String report
+                = "=== Insurance Claim Report ===\n"
+                + "Patient    : " + jTextField8.getText() + "\n"
+                + "Provider   : " + jComboBox1.getSelectedItem() + "\n"
+                + "Claim Type : " + jComboBox2.getSelectedItem() + "\n"
+                + "Amount     : Rs. " + jTextField9.getText() + "\n"
+                + "Policy No  : " + jTextField10.getText() + "\n"
+                + "Status     : " + jComboBox3.getSelectedItem() + "\n"
+                + "Remarks    : " + jTextArea1.getText() + "\n"
+                + "==============================";
+
+        jTextArea1.setText(report);
+        javax.swing.JOptionPane.showMessageDialog(this,
+                "Report generated in remarks area.",
+                "Report", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+    }//GEN-LAST:event_jButton6ActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

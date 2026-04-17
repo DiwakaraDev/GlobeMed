@@ -12,16 +12,17 @@ public class Patient {
 
     public Patient() {}
 
-    public int getPatientId() { return patientId; }
-    public void setPatientId(int patientId) { this.patientId = patientId; }
-    public String getFullName() { return fullName; }
-    public void setFullName(String fullName) { this.fullName = fullName; }
-    public LocalDate getDob() { return dob; }
-    public void setDob(LocalDate dob) { this.dob = dob; }
-    public String getGender() { return gender; }
-    public void setGender(String gender) { this.gender = gender; }
-    public String getContact() { return contact; }
-    public void setContact(String contact) { this.contact = contact; }
-    public String getAddress() { return address; }
-    public void setAddress(String address) { this.address = address; }
+    public int getPatientId()     { return patientId; }
+    public String getFullName()   { return fullName; }
+    public LocalDate getDob()     { return dob; }
+    public String getGender()     { return gender; }
+    public String getContact()    { return contact; }
+    public String getAddress()    { return address; }
+
+    public void setPatientId(int v)       { this.patientId = v; }
+    public void setFullName(String v)     { this.fullName = v; }
+    public void setDob(LocalDate v)       { this.dob = v; }
+    public void setGender(String v)       { this.gender = v; }
+    public void setContact(String v)      { this.contact = v; }
+    public void setAddress(String v)      { this.address = v; }
 }

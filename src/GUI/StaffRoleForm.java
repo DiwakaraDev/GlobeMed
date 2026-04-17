@@ -1,10 +1,5 @@
-
 package GUI;
 
-import Model.Staff;
-import Model.StaffDAO;
-import Model.StaffPermissions;
-import Model.StaffPermissionsDAO;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
@@ -15,9 +10,29 @@ import javax.swing.SwingWorker;
  */
 public class StaffRoleForm extends javax.swing.JDialog {
 
+    private boolean isExistingStaff = false;  // tracks INSERT vs UPDATE mode
+
     public StaffRoleForm(java.awt.Frame parent) {
         super(parent, "BillingForm Form", true);
         initComponents();
+
+        txtStaffId.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            @Override
+            public void insertUpdate(javax.swing.event.DocumentEvent e) {
+                lookupStaff();
+            }
+
+            @Override
+            public void removeUpdate(javax.swing.event.DocumentEvent e) {
+                lookupStaff();
+            }
+
+            @Override
+            public void changedUpdate(javax.swing.event.DocumentEvent e) {
+                lookupStaff();
+            }
+        });
+
         setLocationRelativeTo(parent);
     }
 
@@ -403,23 +418,23 @@ public class StaffRoleForm extends javax.swing.JDialog {
     }//GEN-LAST:event_txtStaffNameActionPerformed
 
     private void btnResetActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnResetActionPerformed
-        btnReset.addActionListener(e -> {
-            cmbRole.setSelectedIndex(0);
-            cmbDepartment.setSelectedIndex(0);
-            chkViewRecords.setSelected(false);
-            chkEditRecords.setSelected(false);
-            chkDeleteRecords.setSelected(false);
-            chkPrescribeMeds.setSelected(false);
-            chkAccessDiagnostics.setSelected(false);
-            chkApproveSurgery.setSelected(false);
-            chkManageBilling.setSelected(false);
-            chkApproveClaims.setSelected(false);
-            chkManageStaff.setSelected(false);
-        });
+        txtStaffId.setText("");
+        txtStaffName.setText("");
+        cmbRole.setSelectedIndex(0);
+        cmbDepartment.setSelectedIndex(0);
+        chkViewRecords.setSelected(false);
+        chkEditRecords.setSelected(false);
+        chkDeleteRecords.setSelected(false);
+        chkPrescribeMeds.setSelected(false);
+        chkAccessDiagnostics.setSelected(false);
+        chkApproveSurgery.setSelected(false);
+        chkManageBilling.setSelected(false);
+        chkApproveClaims.setSelected(false);
+        chkManageStaff.setSelected(false);
     }//GEN-LAST:event_btnResetActionPerformed
 
     private void btnCloseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCloseActionPerformed
-        btnClose.addActionListener(e -> dispose());        // TODO add your handling code here:
+        dispose();
     }//GEN-LAST:event_btnCloseActionPerformed
 
     private void cmbDepartmentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbDepartmentActionPerformed
@@ -431,67 +446,147 @@ public class StaffRoleForm extends javax.swing.JDialog {
     }//GEN-LAST:event_chkAccessDiagnosticsActionPerformed
 
     private void btnSavePermissionsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSavePermissionsActionPerformed
-
-            new SwingWorker<Void, Void>() {
-                protected Void doInBackground() {
-                    try {
-                        int staffId = Integer.parseInt(txtStaffId.getText().trim());
-                        StaffPermissions perm = new StaffPermissions();
-                        perm.setStaffId(staffId);
-                        perm.setViewRecords(chkViewRecords.isSelected());
-                        perm.setEditRecords(chkEditRecords.isSelected());
-                        perm.setDeleteRecords(chkDeleteRecords.isSelected());
-                        perm.setPrescribeMeds(chkPrescribeMeds.isSelected());
-                        perm.setAccessDiagnostics(chkAccessDiagnostics.isSelected());
-                        perm.setApproveSurgery(chkApproveSurgery.isSelected());
-                        perm.setManageBilling(chkManageBilling.isSelected());
-                        perm.setApproveClaims(chkApproveClaims.isSelected());
-                        perm.setManageStaff(chkManageStaff.isSelected());
-
-                        boolean ok = StaffPermissionsDAO.savePermissions(perm);
-
-                        SwingUtilities.invokeLater(() -> {
-                            if (ok) {
-                                JOptionPane.showMessageDialog(StaffRoleForm.this, "Permissions saved successfully");
-                            } else {
-                                JOptionPane.showMessageDialog(StaffRoleForm.this, "Failed to save permissions");
-                            }
-                        });
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                    }
-                    return null;
-                }
-            }.execute();
+        // Reuses same logic — permissions saved together with role
+        btnAssignRoleActionPerformed(evt);
     }//GEN-LAST:event_btnSavePermissionsActionPerformed
 
     private void btnAssignRoleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAssignRoleActionPerformed
-        // TODO add your handling code here:
-        btnAssignRole.addActionListener(e -> {
-            new SwingWorker<Void, Void>() {
-                protected Void doInBackground() {
-                    try {
-                        Staff staff = new Staff();
-                        staff.setStaffName(txtStaffName.getText().trim());
-                        staff.setRole(cmbRole.getSelectedItem().toString());
-                        staff.setDepartment(cmbDepartment.getSelectedItem().toString());
+        String staffId = txtStaffId.getText().trim();    // ✅ lowercase d
+        String name = txtStaffName.getText().trim();
+        String role = cmbRole.getSelectedItem().toString();
+        String dept = cmbDepartment.getSelectedItem().toString();
 
-                        int id = StaffDAO.addStaff(staff);
-                        txtStaffId.setText(String.valueOf(id));
+        if (staffId.isEmpty() || name.isEmpty()) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "Staff ID and Name are required.", "Validation",
+                    javax.swing.JOptionPane.WARNING_MESSAGE);
+            return;
+        }
 
-                        SwingUtilities.invokeLater(()
-                                -> JOptionPane.showMessageDialog(StaffRoleForm.this, "Staff role assigned. ID: " + id)
-                        );
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
+        if (role.equals("Select Role") || dept.equals("Select Department")) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "Please select a Role and Department.", "Validation",
+                    javax.swing.JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        boolean ok;
+        if (isExistingStaff) {
+            ok = Model.StaffDAO.updateStaff(staffId, name, role, dept,
+                    chkViewRecords.isSelected(), // General: View
+                    chkEditRecords.isSelected(), // General: Edit
+                    chkDeleteRecords.isSelected(), // General: Delete
+                    chkPrescribeMeds.isSelected(), // Medical: View/Prescribe
+                    chkAccessDiagnostics.isSelected(), // Medical: Edit/Diagnostics
+                    chkApproveSurgery.isSelected(), // Medical: Delete/Surgery
+                    chkManageBilling.isSelected(), // Admin: View/Billing
+                    chkApproveClaims.isSelected(), // Admin: Edit/Claims
+                    chkManageStaff.isSelected());   // Admin: Delete/Staff
+
+            if (ok) {
+                javax.swing.JOptionPane.showMessageDialog(this,
+                        "✅ Staff role updated!", "Updated",
+                        javax.swing.JOptionPane.INFORMATION_MESSAGE);
+            }
+        } else {
+            ok = Model.StaffDAO.insertStaff(staffId, name, role, dept,
+                    chkViewRecords.isSelected(),
+                    chkEditRecords.isSelected(),
+                    chkDeleteRecords.isSelected(),
+                    chkPrescribeMeds.isSelected(),
+                    chkAccessDiagnostics.isSelected(),
+                    chkApproveSurgery.isSelected(),
+                    chkManageBilling.isSelected(),
+                    chkApproveClaims.isSelected(),
+                    chkManageStaff.isSelected());
+
+            if (ok) {
+                isExistingStaff = true;
+                javax.swing.JOptionPane.showMessageDialog(this,
+                        "✅ Staff saved!", "Saved",
+                        javax.swing.JOptionPane.INFORMATION_MESSAGE);
+            }
+        }
+
+        if (!ok) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "Operation failed.", "Error",
+                    javax.swing.JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void lookupStaff() {
+        String staffId = txtStaffId.getText().trim();   // ✅ lowercase d
+
+        if (staffId.isEmpty()) {
+            clearFields();
+            isExistingStaff = false;
+            return;
+        }
+
+        new javax.swing.SwingWorker<java.util.Map<String, Object>, Void>() {  // ✅ fully qualified
+            @Override
+            protected java.util.Map<String, Object> doInBackground() {
+                return Model.StaffDAO.getStaffById(staffId);
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    java.util.Map<String, Object> data = get();
+
+                    if (!data.isEmpty()) {
+                        isExistingStaff = true;
+
+                        txtStaffName.setText((String) data.get("staff_name"));
+                        cmbRole.setSelectedItem(data.get("role"));
+                        cmbDepartment.setSelectedItem(data.get("department"));
+
+                        // General tab — real checkbox names ✅
+                        chkViewRecords.setSelected((Boolean) data.get("perm_general_view"));
+                        chkEditRecords.setSelected((Boolean) data.get("perm_general_edit"));
+                        chkDeleteRecords.setSelected((Boolean) data.get("perm_general_delete"));
+
+                        // Medical tab — real checkbox names ✅
+                        chkPrescribeMeds.setSelected((Boolean) data.get("perm_medical_view"));
+                        chkAccessDiagnostics.setSelected((Boolean) data.get("perm_medical_edit"));
+                        chkApproveSurgery.setSelected((Boolean) data.get("perm_medical_delete"));
+
+                        // Administrative tab — real checkbox names ✅
+                        chkManageBilling.setSelected((Boolean) data.get("perm_admin_view"));
+                        chkApproveClaims.setSelected((Boolean) data.get("perm_admin_edit"));
+                        chkManageStaff.setSelected((Boolean) data.get("perm_admin_delete"));
+
+                    } else {
+                        isExistingStaff = false;
+                        clearFields();
                     }
-                    return null;
+
+                } catch (Exception ex) {
+                    System.err.println("lookupStaff error: " + ex.getMessage());
                 }
-            }.execute();
-        });
+            }
+        }.execute();
     }//GEN-LAST:event_btnAssignRoleActionPerformed
 
- 
+    private void clearFields() {
+        txtStaffName.setText("");
+        cmbRole.setSelectedIndex(0);
+        cmbDepartment.setSelectedIndex(0);
+        // General ✅
+        chkViewRecords.setSelected(false);
+        chkEditRecords.setSelected(false);
+        chkDeleteRecords.setSelected(false);
+        // Medical ✅
+        chkPrescribeMeds.setSelected(false);
+        chkAccessDiagnostics.setSelected(false);
+        chkApproveSurgery.setSelected(false);
+        // Administrative ✅
+        chkManageBilling.setSelected(false);
+        chkApproveClaims.setSelected(false);
+        chkManageStaff.setSelected(false);
+    }
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnAssignRole;
